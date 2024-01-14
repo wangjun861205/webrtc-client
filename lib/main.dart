@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:sdp_transform/sdp_transform.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
+import './components/video_view.dart';
 
 void main() {
   runApp(const MyApp());
@@ -19,15 +21,18 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
+  MyHomePage({Key? key, required this.title}) : super(key: key);
 
   final String title;
+
+  final WebSocketChannel ws =
+      WebSocketChannel.connect(Uri.parse("ws://localhost:8000/ws"));
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -170,20 +175,12 @@ class _MyHomePageState extends State<MyHomePage> {
         height: 210,
         child: Row(children: [
           Flexible(
-            child: Container(
-              key: const Key('local'),
-              margin: const EdgeInsets.fromLTRB(5.0, 5.0, 5.0, 5.0),
-              decoration: const BoxDecoration(color: Colors.black),
-              child: RTCVideoView(_localVideoRenderer),
-            ),
+            child: VideoView(
+                renderer: _localVideoRenderer, key: const Key("local")),
           ),
           Flexible(
-            child: Container(
-              key: const Key('remote'),
-              margin: const EdgeInsets.fromLTRB(5.0, 5.0, 5.0, 5.0),
-              decoration: const BoxDecoration(color: Colors.black),
-              child: RTCVideoView(_remoteVideoRenderer),
-            ),
+            child: VideoView(
+                renderer: _remoteVideoRenderer, key: const Key("remote")),
           ),
         ]),
       );
