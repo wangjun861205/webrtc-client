@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:webrtc_client/apis/login.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class LoginScreen extends StatelessWidget {
   late TextEditingController emailCtrl;
@@ -19,6 +23,7 @@ class LoginScreen extends StatelessWidget {
           minWidth: 200,
         ),
         child: TextField(
+          obscureText: true,
           controller: controller,
           decoration: InputDecoration(label: label, hintText: hintText),
         ));
@@ -39,7 +44,20 @@ class LoginScreen extends StatelessWidget {
         input(
             controller: passwordCtrl,
             label: const Text("Password"),
-            hintText: "Please enter your email")
+            hintText: "Please enter your email"),
+        ElevatedButton(
+            onPressed: () {
+              login(email: emailCtrl.text, password: passwordCtrl)
+                  .then((token) {
+                FlutterSecureStorage()
+                    .write(key: "AuthToken", value: token)
+                    .then((_) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Successfully login")));
+                });
+              });
+            },
+            child: const Text("Login"))
       ]),
     );
   }
