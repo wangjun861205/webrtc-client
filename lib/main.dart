@@ -4,7 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:sdp_transform/sdp_transform.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:go_router/go_router.dart';
+import 'package:webrtc_client/screens/login.dart';
 import './components/video_view.dart';
+
+final _route = GoRouter(
+    routes: [GoRoute(path: "/", builder: (context, state) => LoginScreen())]);
 
 void main() {
   runApp(const MyApp());
@@ -16,12 +21,12 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      routerConfig: _route,
     );
   }
 }

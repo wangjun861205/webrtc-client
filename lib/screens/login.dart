@@ -16,7 +16,8 @@ class LoginScreen extends StatelessWidget {
   Widget input(
       {required TextEditingController controller,
       required Widget label,
-      required String hintText}) {
+      required String hintText,
+      bool obscureText = false}) {
     return ConstrainedBox(
         constraints: const BoxConstraints(
           maxWidth: 300,
@@ -36,29 +37,35 @@ class LoginScreen extends StatelessWidget {
         title: const Text("Login"),
         centerTitle: true,
       ),
-      body: Column(children: [
-        input(
-            controller: emailCtrl,
-            label: const Text("Email"),
-            hintText: "Please enter your email"),
-        input(
-            controller: passwordCtrl,
-            label: const Text("Password"),
-            hintText: "Please enter your email"),
-        ElevatedButton(
-            onPressed: () {
-              login(email: emailCtrl.text, password: passwordCtrl)
-                  .then((token) {
-                FlutterSecureStorage()
-                    .write(key: "AuthToken", value: token)
-                    .then((_) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Successfully login")));
+      body: Center(
+        child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
+          input(
+              controller: emailCtrl,
+              label: const Text("Email"),
+              hintText: "Please enter your email"),
+          input(
+              controller: passwordCtrl,
+              label: const Text("Password"),
+              hintText: "Please enter your password",
+              obscureText: true),
+          ElevatedButton(
+              onPressed: () {
+                login(email: emailCtrl.text, password: passwordCtrl.text).then(
+                    (token) {
+                  const FlutterSecureStorage()
+                      .write(key: "AuthToken", value: token)
+                      .then((_) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Successfully login")));
+                  });
+                }, onError: (e) {
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(SnackBar(content: Text(e.toString())));
                 });
-              });
-            },
-            child: const Text("Login"))
-      ]),
+              },
+              child: const Text("Login"))
+        ]),
+      ),
     );
   }
 }
