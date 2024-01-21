@@ -1,15 +1,44 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:sdp_transform/sdp_transform.dart';
+import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:go_router/go_router.dart';
+import 'package:webrtc_client/blocs/chat.dart';
+import 'package:webrtc_client/screens/error.dart';
+import 'package:webrtc_client/screens/home.dart';
 import 'package:webrtc_client/screens/login.dart';
+import 'package:webrtc_client/screens/signup.dart';
+import 'package:webrtc_client/screens/spin.dart';
 import './components/video_view.dart';
 
-final _route = GoRouter(
-    routes: [GoRoute(path: "/", builder: (context, state) => LoginScreen())]);
+final _route = GoRouter(routes: [
+  GoRoute(
+      path: "/",
+      builder: (context, state) => FutureBuilder(
+          future: FlutterSecureStorage().read(key: "AuthToken"),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState != ConnectionState.done) {
+              return const SpinScreen();
+            }
+            if (snapshot.hasError) {
+              return ErrorScreen(error: snapshot.error);
+            }
+            if (snapshot.data == null) {
+              return BlocProvider(
+                  create: (_) => ChatCubit(), child: LoginScreen());
+            }
+            debugPrint(snapshot.data);
+            return BlocProvider(
+                create: (_) => ChatCubit(), child: HomeScreen());
+          })),
+  GoRoute(path: "/login", builder: (context, state) => LoginScreen()),
+  GoRoute(path: "/signup", builder: (context, state) => SignupScreen())
+]);
 
 void main() {
   runApp(const MyApp());

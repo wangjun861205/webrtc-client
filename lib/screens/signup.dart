@@ -1,18 +1,17 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:webrtc_client/apis/login.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:webrtc_client/apis/signup.dart';
 import 'package:go_router/go_router.dart';
-import 'package:webrtc_client/blocs/chat.dart';
-import 'package:webrtc_client/utils.dart';
 
-class LoginScreen extends StatelessWidget {
-  final TextEditingController phoneCtrl = TextEditingController();
-  final TextEditingController passwordCtrl = TextEditingController();
+class SignupScreen extends StatelessWidget {
+  late TextEditingController phoneCtrl;
+  late TextEditingController passwordCtrl;
 
-  LoginScreen({super.key});
+  SignupScreen({super.key}) {
+    phoneCtrl = TextEditingController();
+    passwordCtrl = TextEditingController();
+  }
 
   Widget input(
       {required TextEditingController controller,
@@ -35,7 +34,7 @@ class LoginScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Login"),
+        title: const Text("Signup"),
         centerTitle: true,
       ),
       body: Center(
@@ -50,16 +49,21 @@ class LoginScreen extends StatelessWidget {
               hintText: "Please enter your password",
               obscureText: true),
           ElevatedButton(
-              onPressed: () => login(
-                      phone: phoneCtrl.text, password: passwordCtrl.text)
-                  .then(
-                      (token) =>
-                          putAuthToken(token).then((_) => context.go("/")),
-                      onError: (e) => ScaffoldMessenger.of(context)
-                          .showSnackBar(SnackBar(content: Text(e.toString())))),
-              child: const Text("Login")),
-          TextButton(
-              onPressed: () => context.go("/signup"),
+              onPressed: () {
+                signup(phone: phoneCtrl.text, password: passwordCtrl.text).then(
+                    (token) {
+                  const FlutterSecureStorage()
+                      .write(key: "AuthToken", value: token)
+                      .then((_) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Successfully signup")));
+                    context.go("/login");
+                  });
+                }, onError: (e) {
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(SnackBar(content: Text(e.toString())));
+                });
+              },
               child: const Text("Signup"))
         ]),
       ),
