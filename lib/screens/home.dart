@@ -47,11 +47,18 @@ _getUserMedia() async {
 }
 
 class HomeScreen extends StatelessWidget {
-  final ChatCubit chat = ChatCubit();
+  final VideoStateCubit state = VideoStateCubit();
+  final FriendsCubit friends = FriendsCubit();
   final WebSocketChannel ws =
       WebSocketChannel.connect(Uri.parse("ws://localhost:8000/apis/v1/ws"));
+  RTCPeerConnection? peerConn;
+  RTCVideoRenderer localRenderer = RTCVideoRenderer();
+  RTCVideoRenderer remoteRenderer = RTCVideoRenderer();
 
   HomeScreen({super.key}) {
+    _createPeerConnection().then((conn) => peerConn = conn);
+    // localRenderer.initialize().then((_) {});
+    // remoteRenderer.initialize().then((_) {});
     getAuthToken().then((token) => ws.sink.add(jsonEncode({
           "token": token,
           "to": "server",
@@ -69,17 +76,15 @@ class HomeScreen extends StatelessWidget {
               String sdp = write(session, null);
               RTCSessionDescription description =
                   RTCSessionDescription(sdp, 'answer');
-              final conn = chat.state.peerConnection!;
-              conn.setRemoteDescription(description);
-              chat.setVideoState(VideoState.beingCalled);
-              chat.setPeerConnection(conn);
+              peerConn!.setRemoteDescription(description);
+              state.set(VideoState.beingCalled);
           }
         case "GreetResponse":
-          List<String> friends = (jsonDecode(map["payload"]) as List<dynamic>)
+          List<String> fs = (jsonDecode(map["payload"]) as List<dynamic>)
               .map((v) => v as String)
               .toList();
-          chat.setVideoState(VideoState.idle);
-          chat.setFriends(friends);
+          state.set(VideoState.idle);
+          friends.set(fs);
       }
     });
   }
@@ -99,12 +104,19 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-        value: chat,
+    return MultiBlocProvider(
+        providers: [
+          BlocProvider.value(value: state),
+          BlocProvider.value(value: friends),
+          BlocProvider(create: (_) => SelectedFriendCubit()),
+        ],
         child: Builder(builder: (context) {
-          final chat = BlocProvider.of<ChatCubit>(context, listen: true);
+          final state = BlocProvider.of<VideoStateCubit>(context, listen: true);
+          final friends = BlocProvider.of<FriendsCubit>(context, listen: true);
+          final selectedFriend =
+              BlocProvider.of<SelectedFriendCubit>(context, listen: true);
 
-          debugPrint(chat.state.videoState.toString());
+          debugPrint(state.state.toString());
           return Scaffold(
               appBar: AppBar(
                 title: const Text("Home"),
@@ -118,52 +130,43 @@ class HomeScreen extends StatelessWidget {
               body: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    chat.state.localRenderer != null
-                        ? SizedBox(
-                            height: 200,
-                            child: VideoView(
-                                renderer: chat.state.localRenderer!,
-                                key: const Key("local")))
-                        : Container(),
-                    chat.state.remoteRenderer != null
-                        ? SizedBox(
-                            height: 200,
-                            child: VideoView(
-                                renderer: chat.state.remoteRenderer!,
-                                key: const Key("remote")))
-                        : Container(),
+                    SizedBox(
+                        height: 200,
+                        child: VideoView(
+                            renderer: localRenderer, key: const Key("local"))),
+                    SizedBox(
+                        height: 200,
+                        child: VideoView(
+                            renderer: remoteRenderer,
+                            key: const Key("remote"))),
                     SizedBox(
                         width: 600,
                         child: DropdownButton(
-                            value: chat.state.selectedFriend,
-                            onChanged: (item) =>
-                                chat.setSelectedFriend(item ?? ""),
-                            items: (chat.state.friends ?? List<String>.empty())
+                            value: selectedFriend.state,
+                            onChanged: (item) => selectedFriend.set(item ?? ""),
+                            items: friends.state
                                 .map((f) => DropdownMenuItem(
                                     key: Key(f), value: f, child: Text(f)))
                                 .toList())),
-                    chat.state.videoState == VideoState.idle
+                    state.state == VideoState.idle
                         ? ElevatedButton(
                             onPressed: () async {
-                              final peerConn = await _createPeerConnection();
                               final localStream = await getLocalStream();
-                              peerConn.addStream(localStream);
-                              final localRenderer = RTCVideoRenderer();
+                              peerConn!.addStream(localStream);
                               await localRenderer.initialize();
                               localRenderer.srcObject = localStream;
-                              chat.setLocalRenderer(localRenderer);
-                              RTCSessionDescription description = await peerConn
-                                  .createOffer({"offerToReceiveVideo": 1});
+                              RTCSessionDescription description =
+                                  await peerConn!
+                                      .createOffer({"offerToReceiveVideo": 1});
                               final session = parse(description.sdp.toString());
-                              peerConn.setLocalDescription(description);
+                              peerConn!.setLocalDescription(description);
+                              state.set(VideoState.offering);
                               ws.sink.add(jsonEncode(message.Message(
                                   token: (await getAuthToken())!,
-                                  to: chat.state.selectedFriend!,
+                                  to: selectedFriend.state!,
                                   payload: jsonEncode(message.Payload(
                                       typ: "Offer",
                                       payload: jsonEncode(session))))));
-                              chat.setVideoState(VideoState.offering);
-                              chat.setPeerConnection(peerConn);
                             },
                             child: const Text("Offer"))
                         : Container()

@@ -45,6 +45,12 @@ enum VideoState {
   answered,
 }
 
+class VideoStateCubit extends Cubit<VideoState> {
+  VideoStateCubit() : super(VideoState.notReady);
+
+  void set(VideoState state) => emit(state);
+}
+
 class Chat {
   final RTCVideoRenderer? localRenderer;
   final RTCVideoRenderer? remoteRenderer;
@@ -131,4 +137,16 @@ class ChatCubit extends Cubit<Chat> {
       selectedFriend: friend,
     ));
   }
+}
+
+class FriendsCubit extends Cubit<List<String>> {
+  FriendsCubit() : super([]);
+
+  void set(List<String> friends) => emit(friends);
+}
+
+class SelectedFriendCubit extends Cubit<String?> {
+  SelectedFriendCubit() : super(null);
+
+  void set(String selected) => emit(selected);
 }
