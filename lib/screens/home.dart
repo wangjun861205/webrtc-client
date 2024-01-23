@@ -72,10 +72,10 @@ class HomeScreen extends StatelessWidget {
           final payload = jsonDecode(map["payload"]);
           switch (payload["typ"]) {
             case "Offer":
-              dynamic session = jsonDecode(payload["payload"]);
-              String sdp = write(session, null);
+              dynamic offer = jsonDecode(payload["payload"]);
+              // String sdp = write(offer["sdp"], null);
               RTCSessionDescription description =
-                  RTCSessionDescription(sdp, 'answer');
+                  RTCSessionDescription(offer["sdp"], offer["type"]);
               peerConn!.setRemoteDescription(description);
               state.set(VideoState.beingCalled);
           }
@@ -158,15 +158,16 @@ class HomeScreen extends StatelessWidget {
                               RTCSessionDescription description =
                                   await peerConn!
                                       .createOffer({"offerToReceiveVideo": 1});
-                              final session = parse(description.sdp.toString());
-                              peerConn!.setLocalDescription(description);
+                              // final session = parse(description.sdp.toString());
+                              await peerConn!.setLocalDescription(description);
                               state.set(VideoState.offering);
                               ws.sink.add(jsonEncode(message.Message(
                                   token: (await getAuthToken())!,
                                   to: selectedFriend.state!,
                                   payload: jsonEncode(message.Payload(
                                       typ: "Offer",
-                                      payload: jsonEncode(session))))));
+                                      payload:
+                                          jsonEncode(description.toMap()))))));
                             },
                             child: const Text("Offer"))
                         : Container()
