@@ -57,8 +57,6 @@ class HomeScreen extends StatelessWidget {
 
   HomeScreen({super.key}) {
     _createPeerConnection().then((conn) => peerConn = conn);
-    // localRenderer.initialize().then((_) {});
-    // remoteRenderer.initialize().then((_) {});
     getAuthToken().then((token) => ws.sink.add(jsonEncode({
           "token": token,
           "to": "server",
@@ -73,11 +71,30 @@ class HomeScreen extends StatelessWidget {
           switch (payload["typ"]) {
             case "Offer":
               dynamic offer = jsonDecode(payload["payload"]);
-              // String sdp = write(offer["sdp"], null);
               RTCSessionDescription description =
                   RTCSessionDescription(offer["sdp"], offer["type"]);
               peerConn!.setRemoteDescription(description);
               state.set(VideoState.beingCalled);
+              peerConn!.createAnswer().then((answer) {
+                peerConn!.setLocalDescription(answer);
+                getAuthToken().then((token) {
+                  ws.sink.add(jsonEncode(message.Message(
+                      token: token!,
+                      to: payload["from"],
+                      payload: jsonEncode(message.Payload(
+                          typ: "Answer",
+                          payload: jsonEncode(answer.toMap()))))));
+                });
+              });
+            case "IceCandiate":
+              final data = jsonDecode(payload["payload"]);
+              final candidate = data["iceCandidate"]["candidate"];
+              final sdpMid = data["iceCandidate"]["id"];
+              final sdpMLineIndex = data["iceCandidate"]["label"];
+              peerConn!.addCandidate(
+                  RTCIceCandidate(candidate, sdpMid, sdpMLineIndex));
+            case "Answer":
+              dynamic answer = jsonDecode(map["payload"]);
           }
         case "GreetResponse":
           List<String> fs = (jsonDecode(map["payload"]) as List<dynamic>)
