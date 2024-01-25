@@ -1,18 +1,35 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:webrtc_client/apis/login.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:webrtc_client/blocs/chat.dart';
 import 'package:webrtc_client/utils.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
+  @override
+  State<StatefulWidget> createState() {
+    return _LoginScreen();
+  }
+}
+
+class _LoginScreen extends State<LoginScreen> {
   final TextEditingController phoneCtrl = TextEditingController();
   final TextEditingController passwordCtrl = TextEditingController();
+  final WebSocketChannel ws =
+      WebSocketChannel.connect(Uri.parse("ws://localhost:8000/apis/v1/ws"));
 
-  LoginScreen({super.key});
+  @override
+  void dispose() {
+    super.dispose();
+    ws.sink.close();
+  }
 
   Widget input(
       {required TextEditingController controller,
@@ -33,6 +50,16 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    ws.stream.listen((event) {
+      final msg = jsonDecode((event as String));
+      switch (msg["typ"]) {
+        case "WSError":
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(msg["reason"])));
+        case "LoginResp":
+          putAuthToken(msg["data"]["token"]).then((_) => context.push("/"));
+      }
+    });
     return Scaffold(
       appBar: AppBar(
         title: const Text("Login"),
@@ -50,13 +77,12 @@ class LoginScreen extends StatelessWidget {
               hintText: "Please enter your password",
               obscureText: true),
           ElevatedButton(
-              onPressed: () => login(
-                      phone: phoneCtrl.text, password: passwordCtrl.text)
-                  .then(
-                      (token) =>
-                          putAuthToken(token).then((_) => context.go("/")),
-                      onError: (e) => ScaffoldMessenger.of(context)
-                          .showSnackBar(SnackBar(content: Text(e.toString())))),
+              onPressed: () => ws.sink.add(jsonEncode({
+                    "Login": {
+                      "username": phoneCtrl.text,
+                      "password": passwordCtrl.text
+                    }
+                  })),
               child: const Text("Login")),
           TextButton(
               onPressed: () => context.go("/signup"),
