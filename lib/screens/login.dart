@@ -11,7 +11,8 @@ import 'package:webrtc_client/blocs/chat.dart';
 import 'package:webrtc_client/utils.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final WebSocketChannel ws;
+  const LoginScreen({required this.ws, super.key});
 
   @override
   State<StatefulWidget> createState() {
@@ -22,14 +23,6 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreen extends State<LoginScreen> {
   final TextEditingController phoneCtrl = TextEditingController();
   final TextEditingController passwordCtrl = TextEditingController();
-  final WebSocketChannel ws =
-      WebSocketChannel.connect(Uri.parse("ws://localhost:8000/apis/v1/ws"));
-
-  @override
-  void dispose() {
-    super.dispose();
-    ws.sink.close();
-  }
 
   Widget input(
       {required TextEditingController controller,
@@ -49,8 +42,9 @@ class _LoginScreen extends State<LoginScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    ws.stream.listen((event) {
+  void initState() {
+    super.initState();
+    widget.ws.stream.listen((event) {
       final msg = jsonDecode((event as String));
       switch (msg["typ"]) {
         case "WSError":
@@ -60,6 +54,10 @@ class _LoginScreen extends State<LoginScreen> {
           putAuthToken(msg["data"]["token"]).then((_) => context.push("/"));
       }
     });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Login"),
@@ -77,7 +75,7 @@ class _LoginScreen extends State<LoginScreen> {
               hintText: "Please enter your password",
               obscureText: true),
           ElevatedButton(
-              onPressed: () => ws.sink.add(jsonEncode({
+              onPressed: () => widget.ws.sink.add(jsonEncode({
                     "Login": {
                       "username": phoneCtrl.text,
                       "password": passwordCtrl.text

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:go_router/go_router.dart';
 import 'package:webrtc_client/blocs/chat.dart';
+import 'package:webrtc_client/blocs/ws.dart';
 import 'package:webrtc_client/screens/error.dart';
 import 'package:webrtc_client/screens/home.dart';
 import 'package:webrtc_client/screens/login.dart';
@@ -16,36 +18,53 @@ import 'package:webrtc_client/screens/signup.dart';
 import 'package:webrtc_client/screens/spin.dart';
 import './components/video_view.dart';
 
-final _route = GoRouter(routes: [
-  GoRoute(
-      path: "/",
-      builder: (context, state) => FutureBuilder(
-          future: FlutterSecureStorage().read(key: "AuthToken"),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState != ConnectionState.done) {
-              return const SpinScreen();
-            }
-            if (snapshot.hasError) {
-              return ErrorScreen(error: snapshot.error);
-            }
-            if (snapshot.data == null) {
-              return BlocProvider(
-                  create: (_) => ChatCubit(), child: LoginScreen());
-            }
-            debugPrint(snapshot.data);
-            return BlocProvider(
-                create: (_) => ChatCubit(), child: HomeScreen());
-          })),
-  GoRoute(path: "/login", builder: (context, state) => LoginScreen()),
-  GoRoute(path: "/signup", builder: (context, state) => SignupScreen())
-]);
+class WebSocketProvider {
+  static WebSocketChannel webSocketChannel =
+      WebSocketChannel.connect(Uri.parse("ws://localhost:9000/apis/v1/ws"))
+        ..changeStream((p0) => p0.asBroadcastStream());
+
+  WebSocketChannel get ws => webSocketChannel;
+}
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  final WS ws = WS(
+      ws: WebSocketChannel.connect(
+          Uri.parse("ws://localhost:9000/apis/v1/ws")));
+
+  late GoRouter route;
+
+  MyApp({Key? key}) {
+    route = GoRouter(routes: [
+      GoRoute(
+          path: "/",
+          builder: (context, state) => FutureBuilder(
+              future: const FlutterSecureStorage().read(key: "AuthToken"),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState != ConnectionState.done) {
+                  return const SpinScreen();
+                }
+                if (snapshot.hasError) {
+                  return ErrorScreen(error: snapshot.error);
+                }
+                if (snapshot.data == null) {
+                  return LoginScreen(ws: WebSocketProvider.webSocketChannel);
+                }
+                debugPrint(snapshot.data);
+                return BlocProvider(
+                    create: (_) => ChatCubit(), child: HomeScreen());
+              })),
+      GoRoute(
+          path: "/login",
+          builder: (context, state) =>
+              LoginScreen(ws: WebSocketProvider.webSocketChannel)),
+      GoRoute(
+          path: "/signup", builder: (context, state) => SignupScreen(ws: ws))
+    ]);
+  }
 
   // This widget is the root of your application.
   @override
@@ -55,7 +74,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      routerConfig: _route,
+      routerConfig: route,
     );
   }
 }
