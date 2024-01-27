@@ -16,11 +16,12 @@ import 'package:webrtc_client/screens/home.dart';
 import 'package:webrtc_client/screens/login.dart';
 import 'package:webrtc_client/screens/signup.dart';
 import 'package:webrtc_client/screens/spin.dart';
+import 'package:webrtc_client/utils.dart';
 import './components/video_view.dart';
 
 class WebSocketProvider {
   static WebSocketChannel webSocketChannel =
-      WebSocketChannel.connect(Uri.parse("ws://localhost:9000/apis/v1/ws"))
+      WebSocketChannel.connect(Uri.parse("ws://localhost:8000/apis/v1/ws"))
         ..changeStream((p0) => p0.asBroadcastStream());
 
   WebSocketChannel get ws => webSocketChannel;
@@ -31,38 +32,34 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  final WS ws = WS(
-      ws: WebSocketChannel.connect(
-          Uri.parse("ws://localhost:9000/apis/v1/ws")));
-
   late GoRouter route;
 
-  MyApp({Key? key}) {
+  MyApp({super.key}) {
     route = GoRouter(routes: [
       GoRoute(
           path: "/",
           builder: (context, state) => FutureBuilder(
-              future: const FlutterSecureStorage().read(key: "AuthToken"),
+              future: getAuthToken(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState != ConnectionState.done) {
                   return const SpinScreen();
                 }
                 if (snapshot.hasError) {
-                  return ErrorScreen(error: snapshot.error);
+                  return ErrorScreen(
+                    error: snapshot.error,
+                    retry: () => context.replace("/"),
+                  );
                 }
                 if (snapshot.data == null) {
-                  return LoginScreen(ws: WebSocketProvider.webSocketChannel);
+                  return LoginScreen();
                 }
-                debugPrint(snapshot.data);
-                return BlocProvider(
-                    create: (_) => ChatCubit(), child: HomeScreen());
+
+                final ws = WebSocketChannel.connect(Uri.parse(
+                    "ws://localhost:8000/apis/v1/ws?auth_token=${snapshot.data}"));
+                return HomeScreen(ws: ws);
               })),
-      GoRoute(
-          path: "/login",
-          builder: (context, state) =>
-              LoginScreen(ws: WebSocketProvider.webSocketChannel)),
-      GoRoute(
-          path: "/signup", builder: (context, state) => SignupScreen(ws: ws))
+      GoRoute(path: "/login", builder: (context, state) => LoginScreen()),
+      GoRoute(path: "/signup", builder: (context, state) => SignupScreen())
     ]);
   }
 

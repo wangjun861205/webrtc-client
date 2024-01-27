@@ -12,9 +12,8 @@ import 'package:webrtc_client/main.dart';
 class SignupScreen extends StatelessWidget {
   final TextEditingController phoneCtrl = TextEditingController();
   final TextEditingController passwordCtrl = TextEditingController();
-  final WS ws;
 
-  SignupScreen({required this.ws, super.key});
+  SignupScreen({super.key});
 
   Widget input(
       {required TextEditingController controller,
@@ -35,51 +34,34 @@ class SignupScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder(
-        stream: ws.signupStream,
-        builder: (context, signupResp) => StreamBuilder(
-            stream: ws.errorStream,
-            builder: (context, error) {
-              if (error.hasData) {
-                debugPrint("============================");
-                debugPrint(error.data.toString());
-                ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(error.data["reason"].toString())));
-              }
-              if (signupResp.hasData) {
-                context.pop();
-              }
-              return Scaffold(
-                appBar: AppBar(
-                  title: const Text("Signup"),
-                  centerTitle: true,
-                ),
-                body: Center(
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        input(
-                            controller: phoneCtrl,
-                            label: const Text("Phone"),
-                            hintText: "Please enter your phone"),
-                        input(
-                            controller: passwordCtrl,
-                            label: const Text("Password"),
-                            hintText: "Please enter your password",
-                            obscureText: true),
-                        ElevatedButton(
-                            onPressed: () {
-                              ws.ws.sink.add({
-                                "Signup": {
-                                  "username": phoneCtrl.text,
-                                  "password": passwordCtrl.text
-                                }
-                              });
-                            },
-                            child: const Text("Signup"))
-                      ]),
-                ),
-              );
-            }));
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Signup"),
+        centerTitle: true,
+      ),
+      body: Center(
+        child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
+          input(
+              controller: phoneCtrl,
+              label: const Text("Phone"),
+              hintText: "Please enter your phone"),
+          input(
+              controller: passwordCtrl,
+              label: const Text("Password"),
+              hintText: "Please enter your password",
+              obscureText: true),
+          ElevatedButton(
+              onPressed: () {
+                signup(phone: phoneCtrl.text, password: passwordCtrl.text).then(
+                    (_) => context.canPop()
+                        ? context.pop()
+                        : context.push("/login"),
+                    onError: (err) => ScaffoldMessenger.of(context)
+                        .showSnackBar(SnackBar(content: Text(err.toString()))));
+              },
+              child: const Text("Signup"))
+        ]),
+      ),
+    );
   }
 }

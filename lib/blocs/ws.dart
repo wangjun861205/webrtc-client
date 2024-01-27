@@ -27,14 +27,15 @@ class WS {
     errorStream = errorStreamCtrl.stream;
     ws.stream.listen((event) {
       final msg = jsonDecode(event as String);
+      debugPrint(msg.toString());
       switch (msg["typ"]) {
-        case "LoginResp":
+        case "Login":
           loginStreamCtrl.sink.add(msg);
-        case "SignupResp":
+        case "Signup":
           signupStreamCtrl.sink.add(msg);
-        case "LogoutResp":
+        case "Logout":
           logoutStreamCtrl.sink.add(msg);
-        case "AcquireFriends":
+        case "Acquire":
           acquireFriendsStreamCtrl.sink.add(msg);
         case "Message":
           messageStreamCtrl.sink.add(msg);
