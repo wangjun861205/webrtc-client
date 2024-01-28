@@ -1,10 +1,14 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:webrtc_client/apis/acquire_friends.dart';
+import 'package:webrtc_client/apis/friend.dart';
+import 'package:webrtc_client/blocs/auth.dart';
 import 'package:webrtc_client/blocs/chat.dart';
+import 'package:webrtc_client/components/friend_dropdown.dart';
 import 'package:webrtc_client/components/video_view.dart';
 import 'package:webrtc_client/screens/error.dart';
 import 'package:webrtc_client/screens/spin.dart';
@@ -27,8 +31,8 @@ _getUserMedia() async {
 }
 
 class HomeScreen extends StatefulWidget {
-  final WebSocketChannel ws;
-  const HomeScreen({required this.ws, super.key});
+  final String authToken;
+  const HomeScreen({required this.authToken, super.key});
 
   @override
   State<StatefulWidget> createState() {
@@ -44,6 +48,7 @@ class _HomeScreen extends State<HomeScreen> {
   VideoState status = VideoState.idle;
   String? selectedFriend;
   List<String> friends = [];
+  late WebSocketChannel ws;
 
   Future<RTCPeerConnection> _createPeerConnection() async {
     Map<String, dynamic> configuration = {
@@ -75,8 +80,10 @@ class _HomeScreen extends State<HomeScreen> {
   @override
   initState() {
     super.initState();
+    ws = WebSocketChannel.connect(Uri.parse(
+        "ws://localhost:8000/apis/v1/ws?auth_token=${widget.authToken}"));
     _createPeerConnection().then((conn) => peerConn = conn);
-    widget.ws.stream.listen((event) {
+    ws.stream.listen((event) {
       final map = jsonDecode(event);
       // debugPrint(map.toString());
       switch (map["typ"]) {
@@ -90,7 +97,7 @@ class _HomeScreen extends State<HomeScreen> {
               peerConn!.setRemoteDescription(description);
               peerConn!.createAnswer().then((answer) {
                 peerConn!.setLocalDescription(answer);
-                widget.ws.sink.add(jsonEncode({
+                ws.sink.add(jsonEncode({
                   "Message": {
                     "to": map["data"]["from"],
                     "content":
@@ -112,7 +119,7 @@ class _HomeScreen extends State<HomeScreen> {
                       content["payload"]["sdp"], content["payload"]["type"]))
                   .then((_) {
                 for (RTCIceCandidate candidate in candidates) {
-                  widget.ws.sink.add(jsonEncode({
+                  ws.sink.add(jsonEncode({
                     "Message": {
                       "to": map["data"]["from"],
                       "content": jsonEncode({
@@ -141,7 +148,7 @@ class _HomeScreen extends State<HomeScreen> {
                 (map["data"] as List<dynamic>).map((v) => v as String).toList();
           });
       }
-      widget.ws.sink.add(jsonEncode("Online"));
+      ws.sink.add(jsonEncode("Online"));
     });
   }
 
@@ -188,18 +195,14 @@ class _HomeScreen extends State<HomeScreen> {
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             SizedBox(
                 width: 600,
-                child: DropdownButton(
-                    value: selectedFriend,
-                    onChanged: (item) => setState(() {
-                          selectedFriend = item;
-                        }),
-                    items: friends
-                        .map((f) => DropdownMenuItem(
-                            key: Key(f), value: f, child: Text(f)))
-                        .toList())),
+                child: FriendDropdown(
+                  authToken: widget.authToken,
+                  onChanged: (item) => setState(() {
+                    selectedFriend = item;
+                  }),
+                )),
             ElevatedButton(
-                onPressed: () =>
-                    widget.ws.sink.add(jsonEncode("AcquireFriends")),
+                onPressed: () => ws.sink.add(jsonEncode("AcquireFriends")),
                 child: const Text("Refresh")),
           ]),
           status == VideoState.idle
@@ -221,7 +224,7 @@ class _HomeScreen extends State<HomeScreen> {
                     setState(() {
                       status = VideoState.offering;
                     });
-                    widget.ws.sink.add(jsonEncode({
+                    ws.sink.add(jsonEncode({
                       "Message": {
                         "to": selectedFriend!,
                         "content": jsonEncode(message.Payload(

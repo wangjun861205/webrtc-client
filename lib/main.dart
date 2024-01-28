@@ -9,9 +9,11 @@ import 'package:sdp_transform/sdp_transform.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:go_router/go_router.dart';
+import 'package:webrtc_client/blocs/auth.dart';
 import 'package:webrtc_client/blocs/chat.dart';
 import 'package:webrtc_client/blocs/ws.dart';
 import 'package:webrtc_client/screens/error.dart';
+import 'package:webrtc_client/screens/friends.dart';
 import 'package:webrtc_client/screens/home.dart';
 import 'package:webrtc_client/screens/login.dart';
 import 'package:webrtc_client/screens/signup.dart';
@@ -35,32 +37,31 @@ class MyApp extends StatelessWidget {
   late GoRouter route;
 
   MyApp({super.key}) {
-    route = GoRouter(routes: [
-      GoRoute(
-          path: "/",
-          builder: (context, state) => FutureBuilder(
-              future: getAuthToken(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState != ConnectionState.done) {
-                  return const SpinScreen();
-                }
-                if (snapshot.hasError) {
-                  return ErrorScreen(
-                    error: snapshot.error,
-                    retry: () => context.replace("/"),
-                  );
-                }
-                if (snapshot.data == null) {
-                  return LoginScreen();
-                }
-
-                final ws = WebSocketChannel.connect(Uri.parse(
-                    "ws://localhost:8000/apis/v1/ws?auth_token=${snapshot.data}"));
-                return HomeScreen(ws: ws);
-              })),
-      GoRoute(path: "/login", builder: (context, state) => LoginScreen()),
-      GoRoute(path: "/signup", builder: (context, state) => SignupScreen())
-    ]);
+    route = GoRouter(
+        routes: [
+          GoRoute(
+              path: "/",
+              builder: (context, state) => HomeScreen(
+                  authToken: state.uri.queryParameters["authToken"]!)),
+          GoRoute(path: "/login", builder: (context, state) => LoginScreen()),
+          GoRoute(path: "/signup", builder: (context, state) => SignupScreen()),
+          GoRoute(
+              path: "/friends",
+              builder: (context, state) => FriendsScreen(
+                    authToken: (state.uri.queryParameters["authToken"])!,
+                  )),
+        ],
+        redirect: (context, state) async {
+          if (state.matchedLocation == "/login" ||
+              state.matchedLocation == "/signup") {
+            return state.matchedLocation;
+          }
+          final authToken = await getAuthToken();
+          if (authToken == null) {
+            return "/login";
+          }
+          return "${state.matchedLocation}?authToken=$authToken";
+        });
   }
 
   // This widget is the root of your application.
