@@ -9,6 +9,7 @@ import 'package:webrtc_client/apis/friend.dart';
 import 'package:webrtc_client/blocs/auth.dart';
 import 'package:webrtc_client/blocs/chat.dart';
 import 'package:webrtc_client/components/friend_dropdown.dart';
+import 'package:webrtc_client/components/friends_screen_button.dart';
 import 'package:webrtc_client/components/video_view.dart';
 import 'package:webrtc_client/screens/error.dart';
 import 'package:webrtc_client/screens/spin.dart';
@@ -49,6 +50,7 @@ class _HomeScreen extends State<HomeScreen> {
   String? selectedFriend;
   List<String> friends = [];
   late WebSocketChannel ws;
+  int numOfFriendRequests = 0;
 
   Future<RTCPeerConnection> _createPeerConnection() async {
     Map<String, dynamic> configuration = {
@@ -81,7 +83,7 @@ class _HomeScreen extends State<HomeScreen> {
   initState() {
     super.initState();
     ws = WebSocketChannel.connect(Uri.parse(
-        "ws://localhost:8000/apis/v1/ws?auth_token=${widget.authToken}"));
+        "ws://localhost:9000/apis/v1/ws?auth_token=${widget.authToken}"));
     _createPeerConnection().then((conn) => peerConn = conn);
     ws.stream.listen((event) {
       final map = jsonDecode(event);
@@ -147,6 +149,7 @@ class _HomeScreen extends State<HomeScreen> {
             friends =
                 (map["data"] as List<dynamic>).map((v) => v as String).toList();
           });
+        case "AddFriend":
       }
       ws.sink.add(jsonEncode("Online"));
     });
@@ -174,6 +177,7 @@ class _HomeScreen extends State<HomeScreen> {
           title: const Text("Home"),
           centerTitle: true,
           actions: [
+            FriendsScreenButton(authToken: widget.authToken),
             TextButton(
                 onPressed: () => context.go("/login"),
                 child: const Text("Login"))
@@ -192,7 +196,9 @@ class _HomeScreen extends State<HomeScreen> {
                   child: VideoView(
                       renderer: remoteRenderer, key: const Key("remote")))
               : Container(),
-          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Flexible(
+              child:
+                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             SizedBox(
                 width: 600,
                 child: FriendDropdown(
@@ -201,10 +207,13 @@ class _HomeScreen extends State<HomeScreen> {
                     selectedFriend = item;
                   }),
                 )),
-            ElevatedButton(
-                onPressed: () => ws.sink.add(jsonEncode("AcquireFriends")),
-                child: const Text("Refresh")),
-          ]),
+            SizedBox(
+              width: 100,
+              child: ElevatedButton(
+                  onPressed: () => ws.sink.add(jsonEncode("AcquireFriends")),
+                  child: const Text("Refresh")),
+            )
+          ])),
           status == VideoState.idle
               ? ElevatedButton(
                   onPressed: () async {

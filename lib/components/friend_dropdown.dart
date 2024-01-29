@@ -16,10 +16,12 @@ class FriendDropdown extends StatefulWidget {
 
 class _FriendDropdown extends State<FriendDropdown> {
   String? selected;
+  late Future<List<String>> future;
 
   @override
   void initState() {
     super.initState();
+    future = myFriends(widget.authToken);
   }
 
   @override
@@ -32,7 +34,9 @@ class _FriendDropdown extends State<FriendDropdown> {
               children: [
                 Text(snapshot.error.toString()),
                 TextButton(
-                    onPressed: () => setState(() {}),
+                    onPressed: () => setState(() {
+                          future = myFriends(widget.authToken);
+                        }),
                     child: const Text("Retry"))
               ],
             );

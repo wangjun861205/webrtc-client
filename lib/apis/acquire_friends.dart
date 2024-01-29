@@ -7,7 +7,7 @@ import 'package:webrtc_client/utils.dart';
 
 Future<List<String>> acquireFriends() async {
   final token = await getAuthToken();
-  final resp = await get(Uri.parse("$baseURL/friends"),
+  final resp = await get(Uri.parse("http://$backendDoamin/apis/v1/friends"),
       headers: {"X-Auth-Token": token!});
   if (resp.statusCode != 200) {
     throw Exception("failed to get friends: ${resp.body}");

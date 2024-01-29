@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:webrtc_client/apis/common.dart';
 
@@ -20,7 +19,7 @@ class Signup {
 }
 
 Future<void> signup({required String phone, required String password}) async {
-  final resp = await post(Uri.parse("$baseURL/signup"),
+  final resp = await post(Uri.parse("http://$backendDoamin/apis/v1/signup"),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode(Signup(phone: phone, password: password)));
   if (resp.statusCode != HttpStatus.ok) {

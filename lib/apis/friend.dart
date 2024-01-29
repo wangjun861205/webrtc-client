@@ -29,7 +29,7 @@ class User {
 }
 
 Future<List<User>> allUsers(String authToken) async {
-  final resp = await get(Uri.parse("$baseURL/users"),
+  final resp = await get(Uri.parse("http://$backendDoamin/apis/v1/users"),
       headers: {"X-Auth-Token": authToken});
   if (resp.statusCode != 200) {
     throw Exception("failed to get all users: ${resp.body}");
@@ -52,7 +52,8 @@ class FriendRequest {
 }
 
 Future<List<FriendRequest>> myRequests(String authToken) async {
-  final resp = await get(Uri.parse("$baseURL/friends/requests"),
+  final resp = await get(
+      Uri.parse("http://$backendDoamin/apis/v1/friends/requests"),
       headers: {"X-Auth-Token": authToken});
   if (resp.statusCode != 200) {
     throw Exception("failed to load my requests: ${resp.body}");
@@ -63,7 +64,8 @@ Future<List<FriendRequest>> myRequests(String authToken) async {
 }
 
 Future<String> addFriend(String friendID, authToken) async {
-  final resp = await post(Uri.parse("$baseURL/friends/requests"),
+  final resp = await post(
+      Uri.parse("http://$backendDoamin/apis/v1/friends/requests"),
       headers: {"Content-Type": "application/json", "X-Auth-Token": authToken},
       body: jsonEncode({"friend_id": friendID}));
   if (resp.statusCode != 200) {
@@ -73,7 +75,8 @@ Future<String> addFriend(String friendID, authToken) async {
 }
 
 Future<void> acceptRequest(String id, authToken) async {
-  final resp = await put(Uri.parse("$baseURL/friends/requests/$id/accept"),
+  final resp = await put(
+      Uri.parse("http://$backendDoamin/apis/v1/friends/requests/$id/accept"),
       headers: {"X-Auth-Token": authToken});
   if (resp.statusCode != 200) {
     throw Exception("failed to add friend: ${resp.body}");
@@ -81,11 +84,26 @@ Future<void> acceptRequest(String id, authToken) async {
 }
 
 Future<List<String>> myFriends(String authToken) async {
-  final resp = await get(Uri.parse("$baseURL/friends"));
-  if (resp.statusCode != 200) {
-    throw Exception("failed to get my friends: ${resp.body}");
+  try {
+    final resp = await get(Uri.parse("http://$backendDoamin/apis/v1/friends"),
+        headers: {"X-Auth-Token": authToken});
+    if (resp.statusCode != 200) {
+      throw Exception(resp.body);
+    }
+    return (jsonDecode(resp.body) as List<dynamic>)
+        .map((v) => v as String)
+        .toList();
+  } catch (e) {
+    throw Exception("failed to get my friends: ${e.toString()}");
   }
-  return (jsonDecode(resp.body) as List<dynamic>)
-      .map((v) => v as String)
-      .toList();
+}
+
+Future<int> numOfFriendRequests(String authToken) async {
+  final resp = await get(
+      Uri.parse("http://$backendDoamin/apis/v1/friends/requests/count"),
+      headers: {"X-Auth-Token": authToken});
+  if (resp.statusCode != 200) {
+    throw Exception("failed to get number of friends requests: ${resp.body}");
+  }
+  return jsonDecode(resp.body)["count"];
 }
