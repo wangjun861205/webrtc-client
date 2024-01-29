@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,16 +18,20 @@ import 'package:webrtc_client/screens/friends.dart';
 import 'package:webrtc_client/screens/home.dart';
 import 'package:webrtc_client/screens/login.dart';
 import 'package:webrtc_client/screens/signup.dart';
-import 'package:webrtc_client/screens/spin.dart';
 import 'package:webrtc_client/utils.dart';
+import 'package:yaml/yaml.dart';
 import './components/video_view.dart';
 
-class WebSocketProvider {
-  static WebSocketChannel webSocketChannel =
-      WebSocketChannel.connect(Uri.parse("ws://localhost:8000/apis/v1/ws"))
-        ..changeStream((p0) => p0.asBroadcastStream());
+class Config {
+  static Map<String, dynamic>? map;
 
-  WebSocketChannel get ws => webSocketChannel;
+  static get backendDomain async {
+    if (map == null) {
+      final file = File("/assets/config.yaml");
+      map = loadYaml(await file.readAsString());
+    }
+    return map!["backendDomain"] as String;
+  }
 }
 
 void main() {

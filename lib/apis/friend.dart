@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
-import 'package:webrtc_client/apis/common.dart';
+import 'package:webrtc_client/main.dart';
 import 'package:webrtc_client/utils.dart';
 
 enum UserType {
@@ -29,7 +29,8 @@ class User {
 }
 
 Future<List<User>> allUsers(String authToken) async {
-  final resp = await get(Uri.parse("http://$backendDoamin/apis/v1/users"),
+  final resp = await get(
+      Uri.parse("http://${Config.backendDomain}/apis/v1/users"),
       headers: {"X-Auth-Token": authToken});
   if (resp.statusCode != 200) {
     throw Exception("failed to get all users: ${resp.body}");
@@ -53,7 +54,7 @@ class FriendRequest {
 
 Future<List<FriendRequest>> myRequests(String authToken) async {
   final resp = await get(
-      Uri.parse("http://$backendDoamin/apis/v1/friends/requests"),
+      Uri.parse("http://${Config.backendDomain}/apis/v1/friends/requests"),
       headers: {"X-Auth-Token": authToken});
   if (resp.statusCode != 200) {
     throw Exception("failed to load my requests: ${resp.body}");
@@ -65,7 +66,7 @@ Future<List<FriendRequest>> myRequests(String authToken) async {
 
 Future<String> addFriend(String friendID, authToken) async {
   final resp = await post(
-      Uri.parse("http://$backendDoamin/apis/v1/friends/requests"),
+      Uri.parse("http://${Config.backendDomain}/apis/v1/friends/requests"),
       headers: {"Content-Type": "application/json", "X-Auth-Token": authToken},
       body: jsonEncode({"friend_id": friendID}));
   if (resp.statusCode != 200) {
@@ -76,7 +77,8 @@ Future<String> addFriend(String friendID, authToken) async {
 
 Future<void> acceptRequest(String id, authToken) async {
   final resp = await put(
-      Uri.parse("http://$backendDoamin/apis/v1/friends/requests/$id/accept"),
+      Uri.parse(
+          "http://${Config.backendDomain}/apis/v1/friends/requests/$id/accept"),
       headers: {"X-Auth-Token": authToken});
   if (resp.statusCode != 200) {
     throw Exception("failed to add friend: ${resp.body}");
@@ -85,7 +87,8 @@ Future<void> acceptRequest(String id, authToken) async {
 
 Future<List<String>> myFriends(String authToken) async {
   try {
-    final resp = await get(Uri.parse("http://$backendDoamin/apis/v1/friends"),
+    final resp = await get(
+        Uri.parse("http://${Config.backendDomain}/apis/v1/friends"),
         headers: {"X-Auth-Token": authToken});
     if (resp.statusCode != 200) {
       throw Exception(resp.body);
@@ -100,7 +103,8 @@ Future<List<String>> myFriends(String authToken) async {
 
 Future<int> numOfFriendRequests(String authToken) async {
   final resp = await get(
-      Uri.parse("http://$backendDoamin/apis/v1/friends/requests/count"),
+      Uri.parse(
+          "http://${Config.backendDomain}/apis/v1/friends/requests/count"),
       headers: {"X-Auth-Token": authToken});
   if (resp.statusCode != 200) {
     throw Exception("failed to get number of friends requests: ${resp.body}");

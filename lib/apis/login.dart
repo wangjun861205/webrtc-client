@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:webrtc_client/apis/common.dart';
+import 'package:webrtc_client/main.dart';
 
 class LoginReq {
   final String phone;
@@ -18,7 +17,8 @@ class LoginReq {
 }
 
 Future<String> login({required String phone, required String password}) async {
-  final resp = await post(Uri.parse("http://$backendDoamin/apis/v1/login"),
+  final resp = await post(
+      Uri.parse("http://${Config.backendDomain}/apis/v1/login"),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode(LoginReq(phone: phone, password: password)));
   if (resp.statusCode != 200) {
