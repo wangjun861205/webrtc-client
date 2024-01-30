@@ -85,6 +85,16 @@ Future<void> acceptRequest(String id, authToken) async {
   }
 }
 
+Future<void> rejectRequest(String id, authToken) async {
+  final resp = await put(
+      Uri.parse(
+          "http://${Config.backendDomain}/apis/v1/friends/requests/$id/reject"),
+      headers: {"X-Auth-Token": authToken});
+  if (resp.statusCode != 200) {
+    throw Exception("failed to add friend: ${resp.body}");
+  }
+}
+
 Future<List<String>> myFriends(String authToken) async {
   try {
     final resp = await get(

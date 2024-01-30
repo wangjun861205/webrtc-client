@@ -1,10 +1,16 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:webrtc_client/apis/friend.dart';
 
 class FriendsScreenButton extends StatefulWidget {
   final String authToken;
+  final StreamController wsStreamCtrl;
 
-  const FriendsScreenButton({required this.authToken, super.key});
+  const FriendsScreenButton(
+      {required this.authToken, required this.wsStreamCtrl, super.key});
 
   @override
   State<StatefulWidget> createState() {
@@ -18,6 +24,14 @@ class _FriendsScreenButton extends State<FriendsScreenButton> {
   @override
   void initState() {
     super.initState();
+    widget.wsStreamCtrl.stream.listen((event) {
+      final map = jsonDecode(event);
+      if (map["typ"] == "AddFriend") {
+        setState(() {
+          future = numOfFriendRequests(widget.authToken);
+        });
+      }
+    });
     future = numOfFriendRequests(widget.authToken);
   }
 
@@ -39,7 +53,11 @@ class _FriendsScreenButton extends State<FriendsScreenButton> {
           }
           return Stack(
             children: [
-              IconButton(onPressed: () {}, icon: const Icon(Icons.contacts)),
+              IconButton(
+                  onPressed: () {
+                    context.go("/friends");
+                  },
+                  icon: const Icon(Icons.contacts)),
               if (snapshot.data! > 0)
                 Positioned(
                     right: 0,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:webrtc_client/apis/friend.dart';
 import 'package:webrtc_client/blocs/auth.dart';
 import 'package:webrtc_client/components/friend_request_list.dart';
@@ -23,7 +24,14 @@ class _FriendsScreen extends State<FriendsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: const Text("Friends"), centerTitle: true),
+        appBar: AppBar(
+          title: const Text("Friends"),
+          centerTitle: true,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_circle_left_outlined),
+            onPressed: () => context.go("/"),
+          ),
+        ),
         body: Column(
           children: [
             FriendRequestList(

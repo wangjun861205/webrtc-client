@@ -64,7 +64,15 @@ class _FriendRequestList extends State<FriendRequestList> {
                                 },
                                 child: const Text("Accept")),
                             TextButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                rejectRequest(
+                                        snapshot.data![i].id, widget.authToken)
+                                    .onError((error, stackTrace) =>
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(SnackBar(
+                                                content:
+                                                    Text(error.toString()))));
+                              },
                               child: const Text("Reject"),
                             )
                           ])))));

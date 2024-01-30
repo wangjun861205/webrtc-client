@@ -1,40 +1,26 @@
-import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:sdp_transform/sdp_transform.dart';
-import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:go_router/go_router.dart';
-import 'package:webrtc_client/blocs/auth.dart';
-import 'package:webrtc_client/blocs/chat.dart';
-import 'package:webrtc_client/blocs/ws.dart';
-import 'package:webrtc_client/screens/error.dart';
 import 'package:webrtc_client/screens/friends.dart';
 import 'package:webrtc_client/screens/home.dart';
 import 'package:webrtc_client/screens/login.dart';
 import 'package:webrtc_client/screens/signup.dart';
 import 'package:webrtc_client/utils.dart';
-import 'package:yaml/yaml.dart';
 import './components/video_view.dart';
 
 class Config {
-  static Map<String, dynamic>? map;
-
-  static get backendDomain async {
-    if (map == null) {
-      final file = File("/assets/config.yaml");
-      map = loadYaml(await file.readAsString());
-    }
-    return map!["backendDomain"] as String;
+  static get backendDomain {
+    return dotenv.env["BACKEND_DOMAIN"];
   }
 }
 
-void main() {
+void main() async {
+  await dotenv.load(fileName: ".env");
   runApp(MyApp());
 }
 
