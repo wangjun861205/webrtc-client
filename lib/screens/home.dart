@@ -9,6 +9,7 @@ import 'package:webrtc_client/apis/acquire_friends.dart';
 import 'package:webrtc_client/apis/friend.dart';
 import 'package:webrtc_client/blocs/auth.dart';
 import 'package:webrtc_client/blocs/chat.dart';
+import 'package:webrtc_client/blocs/ws.dart';
 import 'package:webrtc_client/components/friend_dropdown.dart';
 import 'package:webrtc_client/components/friends_screen_button.dart';
 import 'package:webrtc_client/components/video_view.dart';
@@ -51,8 +52,7 @@ class _HomeScreen extends State<HomeScreen> {
   VideoState status = VideoState.idle;
   String? selectedFriend;
   List<String> friends = [];
-  late WebSocketChannel ws;
-  late StreamController wsStreamCtrl;
+  StreamSubscription? sub;
 
   Future<RTCPeerConnection> _createPeerConnection() async {
     Map<String, dynamic> configuration = {
@@ -82,14 +82,38 @@ class _HomeScreen extends State<HomeScreen> {
   }
 
   @override
+  void deactivate() async {
+    super.deactivate();
+    if (sub != null) {
+      await sub!.cancel();
+    }
+  }
+
+  @override
   initState() {
     super.initState();
-    ws = WebSocketChannel.connect(Uri.parse(
-        "ws://${Config.backendDomain}/apis/v1/ws?auth_token=${widget.authToken}"));
     _createPeerConnection().then((conn) => peerConn = conn);
-    wsStreamCtrl = StreamController.broadcast();
-    wsStreamCtrl.addStream(ws.stream);
-    wsStreamCtrl.stream.listen((event) {
+  }
+
+  _HomeScreen();
+
+  Future<MediaStream> getLocalStream() async {
+    final Map<String, dynamic> mediaConstraints = {
+      'audio': true,
+      'video': {
+        'facingMode': 'user',
+      }
+    };
+
+    MediaStream stream =
+        await navigator.mediaDevices.getUserMedia(mediaConstraints);
+    return stream;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ws = BlocProvider.of<WSCubit>(context, listen: true);
+    sub = ws.state!.stream.listen((event) {
       final map = jsonDecode(event);
       // debugPrint(map.toString());
       switch (map["typ"]) {
@@ -103,7 +127,7 @@ class _HomeScreen extends State<HomeScreen> {
               peerConn!.setRemoteDescription(description);
               peerConn!.createAnswer().then((answer) {
                 peerConn!.setLocalDescription(answer);
-                ws.sink.add(jsonEncode({
+                ws.state!.sink.add(jsonEncode({
                   "Message": {
                     "to": map["data"]["from"],
                     "content":
@@ -125,7 +149,7 @@ class _HomeScreen extends State<HomeScreen> {
                       content["payload"]["sdp"], content["payload"]["type"]))
                   .then((_) {
                 for (RTCIceCandidate candidate in candidates) {
-                  ws.sink.add(jsonEncode({
+                  ws.state!.sink.add(jsonEncode({
                     "Message": {
                       "to": map["data"]["from"],
                       "content": jsonEncode({
@@ -154,27 +178,8 @@ class _HomeScreen extends State<HomeScreen> {
                 (map["data"] as List<dynamic>).map((v) => v as String).toList();
           });
       }
-      ws.sink.add(jsonEncode("Online"));
+      ws.state!.sink.add(jsonEncode("Online"));
     });
-  }
-
-  _HomeScreen();
-
-  Future<MediaStream> getLocalStream() async {
-    final Map<String, dynamic> mediaConstraints = {
-      'audio': true,
-      'video': {
-        'facingMode': 'user',
-      }
-    };
-
-    MediaStream stream =
-        await navigator.mediaDevices.getUserMedia(mediaConstraints);
-    return stream;
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
           title: const Text("Home"),
@@ -182,7 +187,6 @@ class _HomeScreen extends State<HomeScreen> {
           actions: [
             FriendsScreenButton(
               authToken: widget.authToken,
-              wsStreamCtrl: wsStreamCtrl,
             ),
             TextButton(
                 onPressed: () => context.go("/login"),
@@ -216,7 +220,8 @@ class _HomeScreen extends State<HomeScreen> {
             SizedBox(
               width: 100,
               child: ElevatedButton(
-                  onPressed: () => ws.sink.add(jsonEncode("AcquireFriends")),
+                  onPressed: () =>
+                      ws.state!.sink.add(jsonEncode("AcquireFriends")),
                   child: const Text("Refresh")),
             )
           ])),
@@ -239,7 +244,7 @@ class _HomeScreen extends State<HomeScreen> {
                     setState(() {
                       status = VideoState.offering;
                     });
-                    ws.sink.add(jsonEncode({
+                    ws.state!.sink.add(jsonEncode({
                       "Message": {
                         "to": selectedFriend!,
                         "content": jsonEncode(message.Payload(

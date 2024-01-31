@@ -1,12 +1,16 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:webrtc_client/apis/friend.dart';
+import 'package:webrtc_client/blocs/ws.dart';
+import 'package:go_router/go_router.dart';
 
 class FriendRequestList extends StatefulWidget {
   final String authToken;
-  final Future<List<FriendRequest>> Function() nextFuture;
 
-  const FriendRequestList(
-      {required this.authToken, required this.nextFuture, super.key});
+  const FriendRequestList({required this.authToken, super.key});
 
   @override
   State<StatefulWidget> createState() {
@@ -16,15 +20,37 @@ class FriendRequestList extends StatefulWidget {
 
 class _FriendRequestList extends State<FriendRequestList> {
   late Future<List<FriendRequest>> future;
+  late StreamSubscription? sub;
 
   @override
   void initState() {
     super.initState();
-    future = widget.nextFuture();
+    future = myRequests(widget.authToken);
+  }
+
+  @override
+  void deactivate() async {
+    super.deactivate();
+    if (sub != null) {
+      await sub!.cancel();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final ws = BlocProvider.of<WSCubit>(context);
+    if (ws.state == null) {
+      context.go("/login");
+      return Container();
+    }
+    sub = ws.state!.stream.listen((event) {
+      final map = jsonDecode(event);
+      if (map["typ"] == "AddFriend") {
+        setState(() {
+          future = myRequests(widget.authToken);
+        });
+      }
+    });
     return FutureBuilder(
         future: future,
         builder: (context, snapshot) {
@@ -33,7 +59,7 @@ class _FriendRequestList extends State<FriendRequestList> {
               Text(snapshot.error.toString()),
               ElevatedButton(
                   onPressed: () {
-                    future = widget.nextFuture();
+                    future = myRequests(widget.authToken);
                     setState(() {});
                   },
                   child: const Text("Refresh"))
