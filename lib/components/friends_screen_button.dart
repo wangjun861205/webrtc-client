@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:webrtc_client/apis/friend.dart';
 import 'package:webrtc_client/blocs/ws.dart';
+import 'package:webrtc_client/main.dart';
 
 class FriendsScreenButton extends StatefulWidget {
   final String authToken;
@@ -20,7 +21,7 @@ class FriendsScreenButton extends StatefulWidget {
 
 class _FriendsScreenButton extends State<FriendsScreenButton> {
   late Future<int> future;
-  late StreamSubscription sub;
+  late StreamSubscription? sub;
 
   @override
   void initState() {
@@ -31,15 +32,16 @@ class _FriendsScreenButton extends State<FriendsScreenButton> {
   @override
   void deactivate() async {
     super.deactivate();
-    if (sub != null) {
-      await sub.cancel();
-    }
+    sub?.cancel();
   }
 
   @override
   Widget build(BuildContext context) {
-    final ws = BlocProvider.of<WSCubit>(context);
-    sub = ws.state!.stream.listen((event) {
+    if (WS.stream == null) {
+      context.go("/login");
+      return Container();
+    }
+    sub = WS.stream!.listen((event) {
       final map = jsonDecode(event);
       if (map["typ"] == "AddFriend") {
         setState(() {

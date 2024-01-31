@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:webrtc_client/apis/friend.dart';
 
 class UserList extends StatefulWidget {
-  final Future<List<User>> Function() nextFuture;
   final String authToken;
 
-  const UserList(
-      {required this.nextFuture, required this.authToken, super.key});
+  const UserList({required this.authToken, super.key});
 
   @override
   State<StatefulWidget> createState() {
@@ -15,41 +13,62 @@ class UserList extends StatefulWidget {
 }
 
 class _UserList extends State<UserList> {
-  late Future<List<User>> future;
+  Future<User?>? future;
+  TextEditingController phoneCtrl = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    future = widget.nextFuture();
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-        future: future,
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return ElevatedButton(
-                onPressed: () => setState(() => future = widget.nextFuture()),
-                child: const Text("Refresh"));
-          }
-          if (!snapshot.hasData) {
-            return const CircularProgressIndicator();
-          }
-
-          return SizedBox(
-              height: 300,
-              child: ListView.builder(
-                  itemCount: snapshot.data!.length,
-                  itemBuilder: (context, i) => ListTile(
-                      title: Text(snapshot.data![i].id),
-                      trailing: SizedBox(
-                          width: 100,
-                          child: snapshot.data![i].typ == UserType.stranger
-                              ? TextButton(
+    return Column(children: [
+      Row(
+        children: [
+          SizedBox(
+              width: 200,
+              child: TextField(
+                controller: phoneCtrl,
+              )),
+          ElevatedButton(
+              onPressed: () => setState(() {
+                    future = searchUser(
+                        authToken: widget.authToken, phone: phoneCtrl.text);
+                  }),
+              child: const Text("Search"))
+        ],
+      ),
+      if (future != null)
+        FutureBuilder(
+            future: future,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState != ConnectionState.done) {
+                return const CircularProgressIndicator();
+              }
+              if (snapshot.hasError) {
+                return ElevatedButton(
+                    onPressed: () => setState(() => future = searchUser(
+                        authToken: widget.authToken, phone: phoneCtrl.text)),
+                    child: const Text("Refresh"));
+              }
+              if (!snapshot.hasData) {
+                return Container();
+              }
+              return SizedBox(
+                  height: 300,
+                  child: Row(children: [
+                    SizedBox(width: 300, child: Text(snapshot.data!.id)),
+                    SizedBox(width: 200, child: Text(snapshot.data!.phone)),
+                    SizedBox(
+                        width: 100,
+                        child: () {
+                          switch (snapshot.data!.typ) {
+                            case UserType.stranger:
+                              return TextButton(
                                   onPressed: () {
-                                    addFriend(snapshot.data![i].id,
-                                            widget.authToken)
+                                    addFriend(
+                                            snapshot.data!.id, widget.authToken)
                                         .catchError((e) {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(SnackBar(
@@ -57,12 +76,20 @@ class _UserList extends State<UserList> {
                                       return e.toString();
                                     });
                                   },
-                                  child: const Text("Add"))
-                              : snapshot.data![i].typ == UserType.friend
-                                  ? TextButton(
-                                      onPressed: () {},
-                                      child: const Text("Del"))
-                                  : const Text("Myself")))));
-        });
+                                  child: const Text("Add"));
+                            case UserType.friend:
+                              return TextButton(
+                                  onPressed: () {}, child: const Text("Del"));
+                            case UserType.myself:
+                              return const Text("Myself");
+                            case UserType.requested:
+                              return const Text("Requested");
+                            case UserType.requesting:
+                              return const Text("Requesting");
+                          }
+                        }())
+                  ]));
+            })
+    ]);
   }
 }

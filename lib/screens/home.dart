@@ -84,9 +84,7 @@ class _HomeScreen extends State<HomeScreen> {
   @override
   void deactivate() async {
     super.deactivate();
-    if (sub != null) {
-      await sub!.cancel();
-    }
+    sub?.cancel();
   }
 
   @override
@@ -112,8 +110,11 @@ class _HomeScreen extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final ws = BlocProvider.of<WSCubit>(context, listen: true);
-    sub = ws.state!.stream.listen((event) {
+    if (WS.stream == null) {
+      context.go("/login");
+      return Container();
+    }
+    sub = WS.stream!.listen((event) {
       final map = jsonDecode(event);
       // debugPrint(map.toString());
       switch (map["typ"]) {
@@ -127,7 +128,7 @@ class _HomeScreen extends State<HomeScreen> {
               peerConn!.setRemoteDescription(description);
               peerConn!.createAnswer().then((answer) {
                 peerConn!.setLocalDescription(answer);
-                ws.state!.sink.add(jsonEncode({
+                WS.sink!.add(jsonEncode({
                   "Message": {
                     "to": map["data"]["from"],
                     "content":
@@ -149,7 +150,7 @@ class _HomeScreen extends State<HomeScreen> {
                       content["payload"]["sdp"], content["payload"]["type"]))
                   .then((_) {
                 for (RTCIceCandidate candidate in candidates) {
-                  ws.state!.sink.add(jsonEncode({
+                  WS.sink!.add(jsonEncode({
                     "Message": {
                       "to": map["data"]["from"],
                       "content": jsonEncode({
@@ -178,7 +179,7 @@ class _HomeScreen extends State<HomeScreen> {
                 (map["data"] as List<dynamic>).map((v) => v as String).toList();
           });
       }
-      ws.state!.sink.add(jsonEncode("Online"));
+      WS.sink!.add(jsonEncode("Online"));
     });
     return Scaffold(
         appBar: AppBar(
@@ -220,8 +221,7 @@ class _HomeScreen extends State<HomeScreen> {
             SizedBox(
               width: 100,
               child: ElevatedButton(
-                  onPressed: () =>
-                      ws.state!.sink.add(jsonEncode("AcquireFriends")),
+                  onPressed: () => WS.sink!.add(jsonEncode("AcquireFriends")),
                   child: const Text("Refresh")),
             )
           ])),
@@ -244,7 +244,7 @@ class _HomeScreen extends State<HomeScreen> {
                     setState(() {
                       status = VideoState.offering;
                     });
-                    ws.state!.sink.add(jsonEncode({
+                    WS.sink!.add(jsonEncode({
                       "Message": {
                         "to": selectedFriend!,
                         "content": jsonEncode(message.Payload(

@@ -3,41 +3,54 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:webrtc_client/main.dart';
-import 'package:webrtc_client/utils.dart';
 
 enum UserType {
   stranger,
   friend,
   myself,
+  requesting,
+  requested,
 }
 
 class User {
   String id;
+  String phone;
   UserType typ;
 
-  User({required this.id, required this.typ});
+  User({required this.id, required this.phone, required this.typ});
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
         id: json["id"],
-        typ: json["typ"] == "Friend"
-            ? UserType.friend
-            : json["typ"] == "Myself"
-                ? UserType.myself
-                : UserType.stranger);
+        phone: json["phone"],
+        typ: () {
+          switch (json["typ"] as String) {
+            case "Friend":
+              return UserType.friend;
+            case "Myself":
+              return UserType.myself;
+            case "Requesting":
+              return UserType.requesting;
+            case "Requested":
+              return UserType.requested;
+            default:
+              return UserType.stranger;
+          }
+        }());
   }
 }
 
-Future<List<User>> allUsers(String authToken) async {
+Future<User?> searchUser(
+    {required String authToken, required String phone}) async {
   final resp = await get(
-      Uri.parse("http://${Config.backendDomain}/apis/v1/users"),
+      Uri.parse("http://${Config.backendDomain}/apis/v1/users?phone=$phone"),
       headers: {"X-Auth-Token": authToken});
   if (resp.statusCode != 200) {
     throw Exception("failed to get all users: ${resp.body}");
   }
   debugPrint(resp.body);
-  final json = jsonDecode(resp.body) as List<dynamic>;
-  return json.map((v) => User.fromJson(v)).toList();
+  final json = jsonDecode(resp.body);
+  return json != null ? User.fromJson(json) : null;
 }
 
 class FriendRequest {

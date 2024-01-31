@@ -5,6 +5,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:webrtc_client/apis/login.dart';
 import 'package:go_router/go_router.dart';
 import 'package:webrtc_client/blocs/ws.dart';
+import 'package:webrtc_client/main.dart';
 import 'package:webrtc_client/utils.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -32,7 +33,6 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ws = BlocProvider.of<WSCubit>(context, listen: true);
     return Scaffold(
       appBar: AppBar(
         title: const Text("Login"),
@@ -53,17 +53,13 @@ class LoginScreen extends StatelessWidget {
               onPressed: () =>
                   login(phone: phoneCtrl.text, password: passwordCtrl.text)
                       .then((token) {
-                    putAuthToken(token).then((_) {
-                      ws
-                          .setWS(WebSocketChannel.connect(Uri.parse(
-                              "ws://${dotenv.env["BACKEND_DOMAIN"]}/apis/v1/ws?auth_token=$token")))
-                          .then((_) {
+                    putAuthToken(token).then(
+                      (_) {
+                        WS.setWS(WebSocketChannel.connect(Uri.parse(
+                            "ws://${dotenv.env["BACKEND_DOMAIN"]}/apis/v1/ws?auth_token=$token")));
                         context.go("/");
-                      });
-                    }, onError: (err) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(err.toString())));
-                    });
+                      },
+                    );
                   },
                           onError: (err) => ScaffoldMessenger.of(context)
                               .showSnackBar(

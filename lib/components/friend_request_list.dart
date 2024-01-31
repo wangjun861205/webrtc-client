@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:webrtc_client/apis/friend.dart';
 import 'package:webrtc_client/blocs/ws.dart';
 import 'package:go_router/go_router.dart';
+import 'package:webrtc_client/main.dart';
 
 class FriendRequestList extends StatefulWidget {
   final String authToken;
@@ -38,12 +39,7 @@ class _FriendRequestList extends State<FriendRequestList> {
 
   @override
   Widget build(BuildContext context) {
-    final ws = BlocProvider.of<WSCubit>(context);
-    if (ws.state == null) {
-      context.go("/login");
-      return Container();
-    }
-    sub = ws.state!.stream.listen((event) {
+    sub = WS.stream?.listen((event) {
       final map = jsonDecode(event);
       if (map["typ"] == "AddFriend") {
         setState(() {
@@ -82,6 +78,10 @@ class _FriendRequestList extends State<FriendRequestList> {
                                 onPressed: () {
                                   acceptRequest(snapshot.data![i].id,
                                           widget.authToken)
+                                      .then((_) => setState(() {
+                                            future =
+                                                myRequests(widget.authToken);
+                                          }))
                                       .onError((error, stackTrace) =>
                                           ScaffoldMessenger.of(context)
                                               .showSnackBar(SnackBar(
@@ -93,6 +93,9 @@ class _FriendRequestList extends State<FriendRequestList> {
                               onPressed: () {
                                 rejectRequest(
                                         snapshot.data![i].id, widget.authToken)
+                                    .then((_) => setState(() {
+                                          future = myRequests(widget.authToken);
+                                        }))
                                     .onError((error, stackTrace) =>
                                         ScaffoldMessenger.of(context)
                                             .showSnackBar(SnackBar(

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -18,6 +19,19 @@ import './components/video_view.dart';
 class Config {
   static get backendDomain {
     return dotenv.env["BACKEND_DOMAIN"];
+  }
+}
+
+class WS {
+  static Sink? sink;
+  static Stream? stream;
+
+  static setWS(WebSocketChannel ws) {
+    sink?.close();
+    final ctrl = StreamController.broadcast();
+    ctrl.addStream(ws.stream);
+    sink = ws.sink;
+    stream = ctrl.stream;
   }
 }
 
@@ -60,15 +74,13 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-        create: (_) => WSCubit(),
-        child: MaterialApp.router(
-          title: 'Flutter Demo',
-          theme: ThemeData(
-            primarySwatch: Colors.blue,
-          ),
-          routerConfig: route,
-        ));
+    return MaterialApp.router(
+      title: 'Flutter Demo',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      routerConfig: route,
+    );
   }
 }
 
