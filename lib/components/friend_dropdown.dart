@@ -16,18 +16,18 @@ class FriendDropdown extends StatefulWidget {
 
 class _FriendDropdown extends State<FriendDropdown> {
   String? selected;
-  late Future<List<String>> future;
+  late Future<List<Friend>> future;
 
   @override
   void initState() {
     super.initState();
-    future = myFriends(widget.authToken);
+    future = myFriends(authToken: widget.authToken, limit: 20, offset: 0);
   }
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-        future: myFriends(widget.authToken),
+        future: myFriends(authToken: widget.authToken, limit: 20, offset: 0),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Column(
@@ -35,7 +35,10 @@ class _FriendDropdown extends State<FriendDropdown> {
                 Text(snapshot.error.toString()),
                 TextButton(
                     onPressed: () => setState(() {
-                          future = myFriends(widget.authToken);
+                          future = myFriends(
+                              authToken: widget.authToken,
+                              limit: 20,
+                              offset: 0);
                         }),
                     child: const Text("Retry"))
               ],
@@ -47,7 +50,8 @@ class _FriendDropdown extends State<FriendDropdown> {
           return DropdownButton(
               value: selected,
               items: snapshot.data!
-                  .map((f) => DropdownMenuItem(key: Key(f), child: Text(f)))
+                  .map((f) =>
+                      DropdownMenuItem(key: Key(f.id), child: Text(f.phone)))
                   .toList(),
               onChanged: (v) {
                 setState(() => selected = v);

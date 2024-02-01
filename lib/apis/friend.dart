@@ -108,16 +108,31 @@ Future<void> rejectRequest(String id, authToken) async {
   }
 }
 
-Future<List<String>> myFriends(String authToken) async {
+class Friend {
+  final String id;
+  final String phone;
+
+  const Friend({required this.id, required this.phone});
+
+  factory Friend.fromJson(Map<String, dynamic> json) {
+    return Friend(id: json["id"], phone: json["phone"]);
+  }
+}
+
+Future<List<Friend>> myFriends(
+    {required String authToken,
+    required int limit,
+    required int offset}) async {
   try {
     final resp = await get(
-        Uri.parse("http://${Config.backendDomain}/apis/v1/friends"),
+        Uri.parse(
+            "http://${Config.backendDomain}/apis/v1/friends?limit=$limit&offset=$offset"),
         headers: {"X-Auth-Token": authToken});
     if (resp.statusCode != 200) {
       throw Exception(resp.body);
     }
     return (jsonDecode(resp.body) as List<dynamic>)
-        .map((v) => v as String)
+        .map((v) => Friend.fromJson(v))
         .toList();
   } catch (e) {
     throw Exception("failed to get my friends: ${e.toString()}");

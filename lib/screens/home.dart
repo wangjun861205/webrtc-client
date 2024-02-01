@@ -11,6 +11,7 @@ import 'package:webrtc_client/blocs/auth.dart';
 import 'package:webrtc_client/blocs/chat.dart';
 import 'package:webrtc_client/blocs/ws.dart';
 import 'package:webrtc_client/components/friend_dropdown.dart';
+import 'package:webrtc_client/components/friends_list.dart';
 import 'package:webrtc_client/components/friends_screen_button.dart';
 import 'package:webrtc_client/components/video_view.dart';
 import 'package:webrtc_client/main.dart';
@@ -195,6 +196,10 @@ class _HomeScreen extends State<HomeScreen> {
           ],
         ),
         body: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
+          SizedBox(
+            height: 300,
+            child: FriendsList(limit: 20, authToken: widget.authToken),
+          ),
           localRenderer.srcObject != null
               ? SizedBox(
                   height: 200,
