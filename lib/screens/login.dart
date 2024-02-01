@@ -55,8 +55,7 @@ class LoginScreen extends StatelessWidget {
                       .then((token) {
                     putAuthToken(token).then(
                       (_) {
-                        WS.setWS(WebSocketChannel.connect(Uri.parse(
-                            "ws://${dotenv.env["BACKEND_DOMAIN"]}/apis/v1/ws?auth_token=$token")));
+                        WS.setWS(token);
                         context.go("/");
                       },
                     );

@@ -23,15 +23,31 @@ class Config {
 }
 
 class WS {
-  static Sink? sink;
-  static Stream? stream;
+  static Sink? _sink;
+  static Stream? _stream;
 
-  static setWS(WebSocketChannel ws) {
-    sink?.close();
+  static setWS(String authToken) {
+    _sink?.close();
+    final ws = WebSocketChannel.connect(Uri.parse(
+        "ws://${Config.backendDomain}/apis/v1/ws?auth_token=$authToken"));
     final ctrl = StreamController.broadcast();
     ctrl.addStream(ws.stream);
-    sink = ws.sink;
-    stream = ctrl.stream;
+    _sink = ws.sink;
+    _stream = ctrl.stream;
+  }
+
+  static Stream getOrCreateStream(String authToken) {
+    if (_stream == null) {
+      setWS(authToken);
+    }
+    return _stream!;
+  }
+
+  static Sink getOrCreateSink(String authToken) {
+    if (_stream == null) {
+      setWS(authToken);
+    }
+    return _sink!;
   }
 }
 

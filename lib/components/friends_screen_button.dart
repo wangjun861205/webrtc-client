@@ -37,11 +37,7 @@ class _FriendsScreenButton extends State<FriendsScreenButton> {
 
   @override
   Widget build(BuildContext context) {
-    if (WS.stream == null) {
-      context.go("/login");
-      return Container();
-    }
-    sub = WS.stream!.listen((event) {
+    sub = WS.getOrCreateStream(widget.authToken).listen((event) {
       final map = jsonDecode(event);
       if (map["typ"] == "AddFriend") {
         setState(() {

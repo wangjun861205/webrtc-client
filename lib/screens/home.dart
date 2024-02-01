@@ -110,11 +110,11 @@ class _HomeScreen extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (WS.stream == null) {
+    if (WS.getOrCreateStream(widget.authToken) == null) {
       context.go("/login");
       return Container();
     }
-    sub = WS.stream!.listen((event) {
+    sub = WS.getOrCreateStream(widget.authToken).listen((event) {
       final map = jsonDecode(event);
       // debugPrint(map.toString());
       switch (map["typ"]) {
@@ -128,13 +128,13 @@ class _HomeScreen extends State<HomeScreen> {
               peerConn!.setRemoteDescription(description);
               peerConn!.createAnswer().then((answer) {
                 peerConn!.setLocalDescription(answer);
-                WS.sink!.add(jsonEncode({
-                  "Message": {
-                    "to": map["data"]["from"],
-                    "content":
-                        jsonEncode({"typ": "Answer", "payload": answer.toMap()})
-                  }
-                }));
+                WS.getOrCreateSink(widget.authToken).add(jsonEncode({
+                      "Message": {
+                        "to": map["data"]["from"],
+                        "content": jsonEncode(
+                            {"typ": "Answer", "payload": answer.toMap()})
+                      }
+                    }));
               });
             case "IceCandidate":
               final data = content["payload"];
@@ -150,22 +150,22 @@ class _HomeScreen extends State<HomeScreen> {
                       content["payload"]["sdp"], content["payload"]["type"]))
                   .then((_) {
                 for (RTCIceCandidate candidate in candidates) {
-                  WS.sink!.add(jsonEncode({
-                    "Message": {
-                      "to": map["data"]["from"],
-                      "content": jsonEncode({
-                        "typ": "IceCandidate",
-                        "payload": {
-                          "calleeId": "widget.calleeId",
-                          "iceCandidate": {
-                            "id": candidate.sdpMid,
-                            "label": candidate.sdpMLineIndex,
-                            "candidate": candidate.candidate
-                          }
+                  WS.getOrCreateSink(widget.authToken).add(jsonEncode({
+                        "Message": {
+                          "to": map["data"]["from"],
+                          "content": jsonEncode({
+                            "typ": "IceCandidate",
+                            "payload": {
+                              "calleeId": "widget.calleeId",
+                              "iceCandidate": {
+                                "id": candidate.sdpMid,
+                                "label": candidate.sdpMLineIndex,
+                                "candidate": candidate.candidate
+                              }
+                            }
+                          })
                         }
-                      })
-                    }
-                  }));
+                      }));
                 }
               });
           }
@@ -179,7 +179,7 @@ class _HomeScreen extends State<HomeScreen> {
                 (map["data"] as List<dynamic>).map((v) => v as String).toList();
           });
       }
-      WS.sink!.add(jsonEncode("Online"));
+      WS.getOrCreateSink(widget.authToken).add(jsonEncode("Online"));
     });
     return Scaffold(
         appBar: AppBar(
@@ -221,7 +221,9 @@ class _HomeScreen extends State<HomeScreen> {
             SizedBox(
               width: 100,
               child: ElevatedButton(
-                  onPressed: () => WS.sink!.add(jsonEncode("AcquireFriends")),
+                  onPressed: () => WS
+                      .getOrCreateSink(widget.authToken)
+                      .add(jsonEncode("AcquireFriends")),
                   child: const Text("Refresh")),
             )
           ])),
@@ -244,14 +246,14 @@ class _HomeScreen extends State<HomeScreen> {
                     setState(() {
                       status = VideoState.offering;
                     });
-                    WS.sink!.add(jsonEncode({
-                      "Message": {
-                        "to": selectedFriend!,
-                        "content": jsonEncode(message.Payload(
-                            typ: "Offer",
-                            payload: jsonEncode(description.toMap())))
-                      }
-                    }));
+                    WS.getOrCreateSink(widget.authToken).add(jsonEncode({
+                          "Message": {
+                            "to": selectedFriend!,
+                            "content": jsonEncode(message.Payload(
+                                typ: "Offer",
+                                payload: jsonEncode(description.toMap())))
+                          }
+                        }));
                   },
                   child: const Text("Offer"))
               : Container()

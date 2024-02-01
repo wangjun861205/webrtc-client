@@ -39,7 +39,7 @@ class _FriendRequestList extends State<FriendRequestList> {
 
   @override
   Widget build(BuildContext context) {
-    sub = WS.stream?.listen((event) {
+    sub = WS.getOrCreateStream(widget.authToken).listen((event) {
       final map = jsonDecode(event);
       if (map["typ"] == "AddFriend") {
         setState(() {

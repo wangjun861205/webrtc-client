@@ -48,8 +48,12 @@ class _UserList extends State<UserList> {
               }
               if (snapshot.hasError) {
                 return ElevatedButton(
-                    onPressed: () => setState(() => future = searchUser(
-                        authToken: widget.authToken, phone: phoneCtrl.text)),
+                    onPressed: () {
+                      setState(() {
+                        future = searchUser(
+                            authToken: widget.authToken, phone: phoneCtrl.text);
+                      });
+                    },
                     child: const Text("Refresh"));
               }
               if (!snapshot.hasData) {
@@ -69,11 +73,16 @@ class _UserList extends State<UserList> {
                                   onPressed: () {
                                     addFriend(
                                             snapshot.data!.id, widget.authToken)
+                                        .then((_) => setState(() {
+                                              future = searchUser(
+                                                  authToken: widget.authToken,
+                                                  phone: phoneCtrl.text);
+                                            }))
                                         .catchError((e) {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(SnackBar(
                                               content: Text(e.toString())));
-                                      return e.toString();
+                                      return;
                                     });
                                   },
                                   child: const Text("Add"));
