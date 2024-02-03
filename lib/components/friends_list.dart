@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:webrtc_client/apis/friend.dart';
 
@@ -46,7 +47,12 @@ class _FriendsList extends State<FriendsList> {
     return PagedListView(
         pagingController: _pageCtrl,
         builderDelegate: PagedChildBuilderDelegate<Friend>(
-            itemBuilder: (context, item, index) =>
-                ListTile(title: Text(item.phone))));
+            itemBuilder: (context, item, index) => ListTile(
+                  title: Text(item.phone),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    context.go("/chat?to=${item.id}");
+                  },
+                )));
   }
 }

@@ -9,6 +9,7 @@ import 'package:sdp_transform/sdp_transform.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:go_router/go_router.dart';
 import 'package:webrtc_client/blocs/ws.dart';
+import 'package:webrtc_client/screens/chat.dart';
 import 'package:webrtc_client/screens/friends.dart';
 import 'package:webrtc_client/screens/home.dart';
 import 'package:webrtc_client/screens/login.dart';
@@ -51,6 +52,13 @@ class WS {
   }
 }
 
+class AuthToken {
+  static String? _token;
+
+  static get token => _token;
+  static set token(t) => _token = t;
+}
+
 void main() async {
   await dotenv.load(fileName: ".env");
   runApp(MyApp());
@@ -64,15 +72,22 @@ class MyApp extends StatelessWidget {
         routes: [
           GoRoute(
               path: "/",
-              builder: (context, state) => HomeScreen(
-                  authToken: state.uri.queryParameters["authToken"]!)),
+              builder: (context, state) =>
+                  HomeScreen(authToken: AuthToken.token)),
           GoRoute(path: "/login", builder: (context, state) => LoginScreen()),
           GoRoute(path: "/signup", builder: (context, state) => SignupScreen()),
           GoRoute(
               path: "/friends",
               builder: (context, state) => FriendsScreen(
-                    authToken: (state.uri.queryParameters["authToken"])!,
+                    authToken: AuthToken.token,
                   )),
+          GoRoute(
+              path: "/chat",
+              builder: (context, state) {
+                return ChatScreen(
+                    authToken: AuthToken.token,
+                    to: state.uri.queryParameters["to"]!);
+              })
         ],
         redirect: (context, state) async {
           if (state.matchedLocation == "/login" ||
@@ -83,7 +98,8 @@ class MyApp extends StatelessWidget {
           if (authToken == null) {
             return "/login";
           }
-          return "${state.matchedLocation}?authToken=$authToken";
+          AuthToken.token = authToken;
+          return null;
         });
   }
 
