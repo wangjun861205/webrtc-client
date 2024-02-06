@@ -27,6 +27,7 @@ class _ChatInputGroup extends State<ChatInputGroup> {
   Widget build(BuildContext context) {
     return Expanded(
         child: Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Flexible(
           flex: 7,

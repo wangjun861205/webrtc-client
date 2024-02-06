@@ -30,7 +30,7 @@ class WS {
   static setWS(String authToken) {
     _sink?.close();
     final ws = WebSocketChannel.connect(Uri.parse(
-        "ws://${Config.backendDomain}/apis/v1/ws?auth_token=$authToken"));
+        "ws://${Config.backendDomain}/ws?auth_token=$authToken"));
     final ctrl = StreamController.broadcast();
     ctrl.addStream(ws.stream);
     _sink = ws.sink;

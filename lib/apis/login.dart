@@ -19,7 +19,7 @@ class LoginReq {
 
 Future<String> login({required String phone, required String password}) async {
   final resp = await post(
-      Uri.parse("http://${Config.backendDomain}/apis/v1/login"),
+      Uri.parse("http://${Config.backendDomain}/login"),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode(LoginReq(phone: phone, password: password)));
   if (resp.statusCode != 200) {
