@@ -9,10 +9,13 @@ import 'package:sdp_transform/sdp_transform.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:go_router/go_router.dart';
 import 'package:webrtc_client/blocs/ws.dart';
+import 'package:webrtc_client/screens/call.dart';
+import 'package:webrtc_client/screens/callee.dart';
 import 'package:webrtc_client/screens/chat.dart';
 import 'package:webrtc_client/screens/friends.dart';
 import 'package:webrtc_client/screens/home.dart';
 import 'package:webrtc_client/screens/login.dart';
+import 'package:webrtc_client/screens/me.dart';
 import 'package:webrtc_client/screens/signup.dart';
 import 'package:webrtc_client/utils.dart';
 import './components/video_view.dart';
@@ -29,8 +32,8 @@ class WS {
 
   static setWS(String authToken) {
     _sink?.close();
-    final ws = WebSocketChannel.connect(Uri.parse(
-        "ws://${Config.backendDomain}/ws?auth_token=$authToken"));
+    final ws = WebSocketChannel.connect(
+        Uri.parse("ws://${Config.backendDomain}/ws?auth_token=$authToken"));
     final ctrl = StreamController.broadcast();
     ctrl.addStream(ws.stream);
     _sink = ws.sink;
@@ -87,6 +90,26 @@ class MyApp extends StatelessWidget {
                 return ChatScreen(
                     authToken: AuthToken.token,
                     to: state.uri.queryParameters["to"]!);
+              }),
+          GoRoute(
+              path: "/me",
+              builder: (context, state) {
+                return MeScreen(authToken: AuthToken.token);
+              }),
+          GoRoute(
+              path: "/call/:calleeID",
+              builder: (context, state) {
+                return CallScreen(
+                    authToken: AuthToken.token,
+                    calleeID: state.pathParameters["calleeID"]!);
+              }),
+          GoRoute(
+              path: "/callee/:callID",
+              builder: (context, state) {
+                return CalleeScreen(
+                    authToken: AuthToken.token,
+                    callID: state.pathParameters["callID"]!,
+                    sdp: state.uri.queryParameters["sdp"]!);
               })
         ],
         redirect: (context, state) async {

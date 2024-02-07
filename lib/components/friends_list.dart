@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:webrtc_client/apis/friend.dart';
+import 'package:webrtc_client/components/call_nav_button.dart';
 
 class FriendsList extends StatefulWidget {
   final int limit;
@@ -49,7 +50,15 @@ class _FriendsList extends State<FriendsList> {
         builderDelegate: PagedChildBuilderDelegate<Friend>(
             itemBuilder: (context, item, index) => ListTile(
                   title: Text(item.phone),
-                  trailing: const Icon(Icons.chevron_right),
+                  trailing: SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.3,
+                    child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          const Icon(Icons.chevron_right),
+                          CallNavButton(calleeID: item.id),
+                        ]),
+                  ),
                   onTap: () {
                     context.go("/chat?to=${item.id}");
                   },

@@ -2,22 +2,14 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:webrtc_client/apis/acquire_friends.dart';
-import 'package:webrtc_client/apis/friend.dart';
-import 'package:webrtc_client/blocs/auth.dart';
 import 'package:webrtc_client/blocs/chat.dart';
-import 'package:webrtc_client/blocs/ws.dart';
 import 'package:webrtc_client/components/friend_dropdown.dart';
 import 'package:webrtc_client/components/friends_list.dart';
 import 'package:webrtc_client/components/friends_screen_button.dart';
+import 'package:webrtc_client/components/me_nav_button.dart';
 import 'package:webrtc_client/components/video_view.dart';
 import 'package:webrtc_client/main.dart';
-import 'package:webrtc_client/screens/error.dart';
-import 'package:webrtc_client/screens/spin.dart';
-import 'package:webrtc_client/utils.dart';
 import '../message.dart' as message;
 import 'package:go_router/go_router.dart';
 
@@ -111,32 +103,29 @@ class _HomeScreen extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (WS.getOrCreateStream(widget.authToken) == null) {
-      context.go("/login");
-      return Container();
-    }
     sub = WS.getOrCreateStream(widget.authToken).listen((event) {
       final map = jsonDecode(event);
-      // debugPrint(map.toString());
+      debugPrint(map.toString());
       switch (map["typ"]) {
         case "Message":
           final content = jsonDecode(map["data"]["content"]);
           switch (content["typ"]) {
             case "Offer":
-              dynamic offer = jsonDecode(content["payload"]);
-              RTCSessionDescription description =
-                  RTCSessionDescription(offer["sdp"], offer["type"]);
-              peerConn!.setRemoteDescription(description);
-              peerConn!.createAnswer().then((answer) {
-                peerConn!.setLocalDescription(answer);
-                WS.getOrCreateSink(widget.authToken).add(jsonEncode({
-                      "Message": {
-                        "to": map["data"]["from"],
-                        "content": jsonEncode(
-                            {"typ": "Answer", "payload": answer.toMap()})
-                      }
-                    }));
-              });
+              context.go("/callee/${map["from"]}?sdp=${map["content"]}}");
+            // dynamic offer = jsonDecode(content["payload"]);
+            // RTCSessionDescription description =
+            //     RTCSessionDescription(offer["sdp"], offer["type"]);
+            // peerConn!.setRemoteDescription(description);
+            // peerConn!.createAnswer().then((answer) {
+            //   peerConn!.setLocalDescription(answer);
+            //   WS.getOrCreateSink(widget.authToken).add(jsonEncode({
+            //         "Message": {
+            //           "to": map["data"]["from"],
+            //           "content": jsonEncode(
+            //               {"typ": "Answer", "payload": answer.toMap()})
+            //         }
+            //       }));
+            // });
             case "IceCandidate":
               final data = content["payload"];
               final candidate = data["iceCandidate"]["candidate"];
@@ -187,6 +176,7 @@ class _HomeScreen extends State<HomeScreen> {
           title: const Text("Home"),
           centerTitle: true,
           actions: [
+            MeNavButton(),
             FriendsScreenButton(
               authToken: widget.authToken,
             ),

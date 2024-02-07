@@ -55,6 +55,18 @@ class _ChatSessionView extends State<ChatSessionView> {
 
   @override
   Widget build(BuildContext context) {
+    final selfAvatar = CircleAvatar(
+      radius: 25,
+      backgroundImage: NetworkImage(
+          "http://${Config.backendDomain}/apis/v1/me/avatar",
+          headers: {"X-Auth-Token": widget.authToken}),
+    );
+    final peerAvatar = CircleAvatar(
+      radius: 25,
+      backgroundImage: NetworkImage(
+          "http://${Config.backendDomain}/apis/v1/users/${widget.to}/avatar",
+          headers: {"X-Auth-Token": widget.authToken}),
+    );
     return FutureBuilder(
         future: future,
         builder: (context, snapshot) {
@@ -81,11 +93,17 @@ class _ChatSessionView extends State<ChatSessionView> {
                         ? SizedBox(
                             child: Row(
                                 mainAxisAlignment: MainAxisAlignment.start,
-                                children: [Text(messages[i].content)]))
+                                children: [
+                                selfAvatar,
+                                Text(messages[i].content)
+                              ]))
                         : SizedBox(
                             child: Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
-                                children: [Text(messages[i].content)]));
+                                children: [
+                                Text(messages[i].content),
+                                peerAvatar,
+                              ]));
                   }));
         });
   }
