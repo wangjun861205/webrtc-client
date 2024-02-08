@@ -119,6 +119,7 @@ class MyApp extends StatelessWidget {
               builder: (context, state) {
                 final extra = state.extra as Map<String, dynamic>;
                 return VideoScreen(
+                    authToken: AuthToken.token,
                     localStream: extra["localStream"],
                     peerConn: extra["peerConn"]);
               })
