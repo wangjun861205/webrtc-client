@@ -21,6 +21,14 @@ class _VideoScreen extends State<VideoScreen> {
   final RTCVideoRenderer remoteRenderer = RTCVideoRenderer();
 
   @override
+  void deactivate() {
+    for (final track in widget.localStream.getTracks()) {
+      track.stop();
+    }
+    super.deactivate();
+  }
+
+  @override
   void initState() {
     localRenderer.initialize().then((_) {
       localRenderer.srcObject = widget.localStream;
@@ -35,6 +43,12 @@ class _VideoScreen extends State<VideoScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
         body: Stack(children: [
+      Column(
+        children: [
+          Flexible(flex: 5, child: VideoView(renderer: localRenderer)),
+          Flexible(flex: 5, child: VideoView(renderer: remoteRenderer))
+        ],
+      ),
       Positioned(
           top: MediaQuery.of(context).size.height * 0.5,
           child: ElevatedButton(
@@ -49,12 +63,6 @@ class _VideoScreen extends State<VideoScreen> {
             },
             child: const Icon(Icons.call_end),
           )),
-      Column(
-        children: [
-          Flexible(flex: 5, child: VideoView(renderer: localRenderer)),
-          Flexible(flex: 5, child: VideoView(renderer: remoteRenderer))
-        ],
-      )
     ]));
   }
 }

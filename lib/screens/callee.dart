@@ -72,7 +72,6 @@ class _CalleeScreen extends State<CalleeScreen> {
                           for (final track in localStream.getTracks()) {
                             peerConn.addTrack(track, localStream);
                           }
-                          peerConn.addStream(localStream);
                           await peerConn
                               .setRemoteDescription(widget.description);
                           final answer = await peerConn.createAnswer({
