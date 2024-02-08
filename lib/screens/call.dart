@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -21,20 +22,76 @@ class CallScreen extends StatefulWidget {
 
 class _CallScreen extends State<CallScreen> {
   late RTCPeerConnection peerConn;
+  late StreamSubscription sub;
+  late MediaStream localStream;
+  List<RTCIceCandidate> candidates = [];
+
+  @override
+  void dispose() {
+    peerConn.close();
+    sub.cancel();
+    super.dispose();
+  }
 
   @override
   void initState() {
+    sub = WS.getOrCreateStream(widget.authToken).listen((event) {
+      final msg = jsonDecode(event);
+      if (msg["typ"] == "Message") {
+        final content = jsonDecode(msg["data"]["content"]);
+        switch (content["typ"]) {
+          case "Answer":
+            final description =
+                RTCSessionDescription(content["sdp"], content["rtcType"]);
+            peerConn.setRemoteDescription(description).then((_) {
+              for (final candidate in candidates) {
+                WS.getOrCreateSink(widget.authToken).add(jsonEncode({
+                      "Message": {
+                        "to": widget.calleeID,
+                        "content": jsonEncode({
+                          "typ": "IceCandidate",
+                          "calleeId": widget.calleeID,
+                          "iceCandidate": {
+                            "id": candidate.sdpMid,
+                            "label": candidate.sdpMLineIndex,
+                            "candidate": candidate.candidate,
+                          }
+                        })
+                      }
+                    }));
+              }
+              context.go("/video",
+                  extra: {"localStream": localStream, "peerConn": peerConn});
+            });
+          case "Refuse":
+            peerConn.close();
+            sub.cancel();
+            context.go("/");
+        }
+      }
+    });
     createConnection().then((conn) {
       peerConn = conn;
-      peerConn.createOffer(
-          {"offerToReceiveVideo": 1, "offerToReceiveAudio": 1}).then((offer) {
-        peerConn.setLocalDescription(offer);
-        WS.getOrCreateSink(widget.authToken).add(jsonEncode({
-              "Message": {
-                "to": widget.calleeID,
-                "content": jsonEncode({"typ": "Offer", "data": offer.sdp}),
-              }
-            }));
+      peerConn.onIceCandidate = (candidate) => candidates.add(candidate);
+      getUserMedia().then((stream) {
+        localStream = stream;
+        for (final track in stream.getTracks()) {
+          peerConn.addTrack(track, stream);
+        }
+        peerConn.createOffer(
+            {"offerToReceiveVideo": 1, "offerToReceiveAudio": 1}).then((offer) {
+          peerConn.setLocalDescription(offer);
+          WS.getOrCreateSink(widget.authToken).add(jsonEncode({
+                "Message": {
+                  "to": widget.calleeID,
+                  "content": jsonEncode({
+                    "typ": "Offer",
+                    "sdp": offer.sdp,
+                    "rtcType": offer.type
+                  }),
+                }
+              }));
+        });
       });
     });
     super.initState();

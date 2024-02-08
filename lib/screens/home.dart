@@ -111,7 +111,10 @@ class _HomeScreen extends State<HomeScreen> {
           final content = jsonDecode(map["data"]["content"]);
           switch (content["typ"]) {
             case "Offer":
-              context.go("/callee/${map["from"]}?sdp=${map["content"]}}");
+              final description =
+                  RTCSessionDescription(content["sdp"], content["rtcType"]);
+              context.go("/callee/${map["data"]["from"]}",
+                  extra: {"description": description});
             // dynamic offer = jsonDecode(content["payload"]);
             // RTCSessionDescription description =
             //     RTCSessionDescription(offer["sdp"], offer["type"]);
@@ -159,24 +162,14 @@ class _HomeScreen extends State<HomeScreen> {
                 }
               });
           }
-        case "Greet":
-          setState(() {
-            friends.add(map["data"] as String);
-          });
-        case "AcquireFriends":
-          setState(() {
-            friends =
-                (map["data"] as List<dynamic>).map((v) => v as String).toList();
-          });
       }
-      WS.getOrCreateSink(widget.authToken).add(jsonEncode("Online"));
     });
     return Scaffold(
         appBar: AppBar(
           title: const Text("Home"),
           centerTitle: true,
           actions: [
-            MeNavButton(),
+            const MeNavButton(),
             FriendsScreenButton(
               authToken: widget.authToken,
             ),

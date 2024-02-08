@@ -17,6 +17,7 @@ import 'package:webrtc_client/screens/home.dart';
 import 'package:webrtc_client/screens/login.dart';
 import 'package:webrtc_client/screens/me.dart';
 import 'package:webrtc_client/screens/signup.dart';
+import 'package:webrtc_client/screens/video.dart';
 import 'package:webrtc_client/utils.dart';
 import './components/video_view.dart';
 
@@ -107,9 +108,19 @@ class MyApp extends StatelessWidget {
               path: "/callee/:callID",
               builder: (context, state) {
                 return CalleeScreen(
-                    authToken: AuthToken.token,
-                    callID: state.pathParameters["callID"]!,
-                    sdp: state.uri.queryParameters["sdp"]!);
+                  authToken: AuthToken.token,
+                  callID: state.pathParameters["callID"]!,
+                  description:
+                      (state.extra! as Map<String, dynamic>)["description"],
+                );
+              }),
+          GoRoute(
+              path: "/video",
+              builder: (context, state) {
+                final extra = state.extra as Map<String, dynamic>;
+                return VideoScreen(
+                    localStream: extra["localStream"],
+                    peerConn: extra["peerConn"]);
               })
         ],
         redirect: (context, state) async {
