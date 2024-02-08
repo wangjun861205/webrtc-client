@@ -28,12 +28,12 @@ class _CalleeScreen extends State<CalleeScreen> {
   late RTCPeerConnection peerConn;
   late StreamSubscription sub;
 
-  @override
-  void dispose() {
-    peerConn.close();
-    sub.cancel();
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   peerConn.close();
+  //   sub.cancel();
+  //   super.dispose();
+  // }
 
   @override
   void initState() {

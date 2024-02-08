@@ -26,12 +26,12 @@ class _CallScreen extends State<CallScreen> {
   late MediaStream localStream;
   List<RTCIceCandidate> candidates = [];
 
-  @override
-  void dispose() {
-    peerConn.close();
-    sub.cancel();
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   peerConn.close();
+  //   sub.cancel();
+  //   super.dispose();
+  // }
 
   @override
   void initState() {
