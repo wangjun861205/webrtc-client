@@ -58,7 +58,10 @@ class _VideoScreen extends State<VideoScreen> {
       localRenderer.srcObject = widget.localStream;
     });
     remoteRenderer.initialize().then((_) {
+      debugPrint(
+          "length of remote streams: ${widget.peerConn.getRemoteStreams().length}");
       remoteRenderer.srcObject = widget.peerConn.getRemoteStreams()[0];
+      setState(() {});
     });
     super.initState();
   }

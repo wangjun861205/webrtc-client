@@ -81,17 +81,18 @@ class _CallScreen extends State<CallScreen> {
         }
         peerConn.createOffer(
             {"offerToReceiveVideo": 1, "offerToReceiveAudio": 1}).then((offer) {
-          peerConn.setLocalDescription(offer);
-          WS.getOrCreateSink(widget.authToken).add(jsonEncode({
-                "Message": {
-                  "to": widget.calleeID,
-                  "content": jsonEncode({
-                    "typ": "Offer",
-                    "sdp": offer.sdp,
-                    "rtcType": offer.type
-                  }),
-                }
-              }));
+          peerConn.setLocalDescription(offer).then((_) {
+            WS.getOrCreateSink(widget.authToken).add(jsonEncode({
+                  "Message": {
+                    "to": widget.calleeID,
+                    "content": jsonEncode({
+                      "typ": "Offer",
+                      "sdp": offer.sdp,
+                      "rtcType": offer.type
+                    }),
+                  }
+                }));
+          });
         });
       });
     });
