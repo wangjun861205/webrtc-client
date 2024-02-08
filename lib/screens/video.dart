@@ -51,7 +51,8 @@ class _VideoScreen extends State<VideoScreen> {
       final candidate = content["iceCandidate"]["candidate"];
       final sdpMid = content["iceCandidate"]["id"];
       final sdpMLineIndex = content["iceCandidate"]["label"];
-      widget.peerConn.addCandidate(RTCIceCandidate(candidate, sdpMid, sdpMLineIndex))
+      widget.peerConn
+          .addCandidate(RTCIceCandidate(candidate, sdpMid, sdpMLineIndex));
     });
     localRenderer.initialize().then((_) {
       localRenderer.srcObject = widget.localStream;
