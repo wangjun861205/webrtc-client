@@ -1,14 +1,22 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:webrtc_client/components/video_view.dart';
+import 'package:webrtc_client/main.dart';
 
 class VideoScreen extends StatefulWidget {
+  final String authToken;
   final MediaStream localStream;
   final RTCPeerConnection peerConn;
 
   const VideoScreen(
-      {required this.localStream, required this.peerConn, super.key});
+      {required this.authToken,
+      required this.localStream,
+      required this.peerConn,
+      super.key});
 
   @override
   State<StatefulWidget> createState() {
@@ -19,6 +27,7 @@ class VideoScreen extends StatefulWidget {
 class _VideoScreen extends State<VideoScreen> {
   final RTCVideoRenderer localRenderer = RTCVideoRenderer();
   final RTCVideoRenderer remoteRenderer = RTCVideoRenderer();
+  late StreamSubscription sub;
 
   @override
   void deactivate() {
@@ -30,6 +39,20 @@ class _VideoScreen extends State<VideoScreen> {
 
   @override
   void initState() {
+    sub = WS.getOrCreateStream(widget.authToken).listen((event) {
+      final msg = jsonDecode(event);
+      if (msg["typ"] != "Message") {
+        return;
+      }
+      final content = jsonDecode(msg["data"]["content"]);
+      if (content["typ"] != "IceCandidate") {
+        return;
+      }
+      final candidate = content["iceCandidate"]["candidate"];
+      final sdpMid = content["iceCandidate"]["id"];
+      final sdpMLineIndex = content["iceCandidate"]["label"];
+      widget.peerConn.addCandidate(RTCIceCandidate(candidate, sdpMid, sdpMLineIndex))
+    });
     localRenderer.initialize().then((_) {
       localRenderer.srcObject = widget.localStream;
     });
@@ -51,6 +74,7 @@ class _VideoScreen extends State<VideoScreen> {
       ),
       Positioned(
           top: MediaQuery.of(context).size.height * 0.5,
+          left: MediaQuery.of(context).size.width * 0.5,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
                 shape: const CircleBorder(), backgroundColor: Colors.red),

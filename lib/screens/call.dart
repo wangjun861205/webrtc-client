@@ -45,6 +45,7 @@ class _CallScreen extends State<CallScreen> {
                 RTCSessionDescription(content["sdp"], content["rtcType"]);
             peerConn.setRemoteDescription(description).then((_) {
               for (final candidate in candidates) {
+                debugPrint(candidate.toString());
                 WS.getOrCreateSink(widget.authToken).add(jsonEncode({
                       "Message": {
                         "to": widget.calleeID,
