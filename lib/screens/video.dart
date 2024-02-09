@@ -39,29 +39,28 @@ class _VideoScreen extends State<VideoScreen> {
 
   @override
   void initState() {
-    sub = WS.getOrCreateStream(widget.authToken).listen((event) {
-      final msg = jsonDecode(event);
-      if (msg["typ"] != "Message") {
-        return;
-      }
-      final content = jsonDecode(msg["data"]["content"]);
-      if (content["typ"] != "IceCandidate") {
-        return;
-      }
-      debugPrint(content["iceCandidate"].toString());
-      final candidate = content["iceCandidate"]["candidate"];
-      final sdpMid = content["iceCandidate"]["id"];
-      final sdpMLineIndex = content["iceCandidate"]["label"];
-      widget.peerConn
-          .addCandidate(RTCIceCandidate(candidate, sdpMid, sdpMLineIndex));
-    });
+    // sub = WS.getOrCreateStream(widget.authToken).listen((event) {
+    //   final msg = jsonDecode(event);
+    //   if (msg["typ"] != "Message") {
+    //     return;
+    //   }
+    //   final content = jsonDecode(msg["data"]["content"]);
+    //   if (content["typ"] != "IceCandidate") {
+    //     return;
+    //   }
+    //   debugPrint(content["iceCandidate"].toString());
+    //   final candidate = content["iceCandidate"]["candidate"];
+    //   final sdpMid = content["iceCandidate"]["id"];
+    //   final sdpMLineIndex = content["iceCandidate"]["label"];
+    //   widget.peerConn
+    //       .addCandidate(RTCIceCandidate(candidate, sdpMid, sdpMLineIndex));
+    // });
     localRenderer.initialize().then((_) {
       localRenderer.srcObject = widget.localStream;
     });
     remoteRenderer.initialize().then((_) {
       final remoteStreams = widget.peerConn.getRemoteStreams();
       remoteRenderer.srcObject = remoteStreams[0];
-      setState(() {});
     });
     super.initState();
   }
@@ -87,10 +86,10 @@ class _VideoScreen extends State<VideoScreen> {
             style: ElevatedButton.styleFrom(
                 shape: const CircleBorder(), backgroundColor: Colors.red),
             onPressed: () {
-              localRenderer.dispose();
-              remoteRenderer.dispose();
-              widget.localStream.dispose();
-              widget.peerConn.close();
+              // localRenderer.dispose();
+              // remoteRenderer.dispose();
+              // widget.localStream.dispose();
+              // widget.peerConn.close();
               context.go("/");
             },
             child: const Icon(Icons.call_end),
