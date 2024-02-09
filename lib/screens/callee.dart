@@ -66,7 +66,8 @@ class _CalleeScreen extends State<CalleeScreen> {
       await peerConn.addTrack(track, localStream);
     }
     await peerConn.setRemoteDescription(widget.description);
-    final answer = await peerConn.createAnswer({"offerToReceiveVideo": 1});
+    // final answer = await peerConn.createAnswer({"offerToReceiveVideo": 1});
+    final answer = await peerConn.createAnswer();
     await peerConn.setLocalDescription(answer);
     WS.getOrCreateSink(widget.authToken).add(jsonEncode({
           "Message": {
