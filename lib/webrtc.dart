@@ -7,7 +7,6 @@ Future<RTCPeerConnection> createConnection() async {
     ]
   }, {
     "mandatory": {
-      "OfferToReceiveAudio": true,
       "OfferToReceiveVideo": true,
     },
     "optional": [],
@@ -16,7 +15,7 @@ Future<RTCPeerConnection> createConnection() async {
 
 Future<MediaStream> getUserMedia() async {
   return await navigator.mediaDevices.getUserMedia({
-    "audio": true,
+    "audio": false,
     "video": {"facingMode": "user"}
   });
 }

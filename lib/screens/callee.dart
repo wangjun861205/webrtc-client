@@ -54,6 +54,27 @@ class _CalleeScreen extends State<CalleeScreen> {
     super.initState();
   }
 
+  Future<MediaStream> onAnswer() async {
+    final localStream = await getUserMedia();
+    for (final track in localStream.getTracks()) {
+      await peerConn.addTrack(track, localStream);
+    }
+    await peerConn.setRemoteDescription(widget.description);
+    final answer = await peerConn.createAnswer({"offerToReceiveVideo": 1});
+    await peerConn.setLocalDescription(answer);
+    WS.getOrCreateSink(widget.authToken).add(jsonEncode({
+          "Message": {
+            "to": widget.callID,
+            "content": jsonEncode({
+              "typ": "Answer",
+              "sdp": answer.sdp,
+              "rtcType": answer.type,
+            })
+          }
+        }));
+    return localStream;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -68,36 +89,11 @@ class _CalleeScreen extends State<CalleeScreen> {
                     Row(children: [
                       ElevatedButton(
                         onPressed: () {
-                          getUserMedia().then((localStream) {
-                            for (final track in localStream.getTracks()) {
-                              peerConn.addTrack(track, localStream);
-                            }
-                            peerConn
-                                .setRemoteDescription(widget.description)
-                                .then((_) {
-                              peerConn.createAnswer({
-                                "offerToReceiveVideo": 1,
-                                "offerToReceiveAudio": 1
-                              }).then((answer) {
-                                peerConn.setLocalDescription(answer).then((_) {
-                                  WS
-                                      .getOrCreateSink(widget.authToken)
-                                      .add(jsonEncode({
-                                        "Message": {
-                                          "to": widget.callID,
-                                          "content": jsonEncode({
-                                            "typ": "Answer",
-                                            "sdp": answer.sdp,
-                                            "rtcType": answer.type,
-                                          })
-                                        }
-                                      }));
-                                  context.go("/video", extra: {
-                                    "localStream": localStream,
-                                    "peerConn": peerConn
-                                  });
-                                });
-                              });
+                          onAnswer().then((localStream) {
+                            sub.cancel();
+                            context.go("/video", extra: {
+                              "localStream": localStream,
+                              "peerConn": peerConn
                             });
                           });
                         },

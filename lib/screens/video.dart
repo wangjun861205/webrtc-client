@@ -60,8 +60,10 @@ class _VideoScreen extends State<VideoScreen> {
       localRenderer.srcObject = widget.localStream;
     });
     remoteRenderer.initialize().then((_) {
-      debugPrint(
-          "length of remote streams: ${widget.peerConn.getRemoteStreams().length}");
+      final remoteStreams = widget.peerConn.getRemoteStreams();
+      debugPrint("length of remote streams: ${remoteStreams.length}");
+      debugPrint(remoteStreams[0]!.active.toString());
+      debugPrint(remoteStreams[0]!.getVideoTracks().length.toString());
       remoteRenderer.srcObject = widget.peerConn.getRemoteStreams()[0];
       setState(() {});
     });
@@ -75,7 +77,11 @@ class _VideoScreen extends State<VideoScreen> {
       Column(
         children: [
           Flexible(flex: 5, child: VideoView(renderer: localRenderer)),
-          Flexible(flex: 5, child: VideoView(renderer: remoteRenderer))
+          Flexible(
+              flex: 5,
+              child: remoteRenderer.srcObject == null
+                  ? const Text("aaaaa")
+                  : VideoView(renderer: remoteRenderer))
         ],
       ),
       Positioned(

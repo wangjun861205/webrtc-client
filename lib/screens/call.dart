@@ -34,14 +34,13 @@ class _CallScreen extends State<CallScreen> {
   //   super.dispose();
   // }
 
-  Future<void> _sendOffer() async {
+  Future<MediaStream> _sendOffer() async {
     final stream = await getUserMedia();
     localStream = stream;
     for (final track in stream.getVideoTracks()) {
       await peerConn.addTrack(track, stream);
     }
-    final offer = await peerConn
-        .createOffer({"offerToReceiveVideo": 1, "offerToReceiveAudio": 1});
+    final offer = await peerConn.createOffer({"offerToReceiveVideo": 1});
     await peerConn.setLocalDescription(offer);
     WS.getOrCreateSink(widget.authToken).add(jsonEncode({
           "Message": {
@@ -50,6 +49,7 @@ class _CallScreen extends State<CallScreen> {
                 {"typ": "Offer", "sdp": offer.sdp, "rtcType": offer.type}),
           }
         }));
+    return stream;
   }
 
   @override
