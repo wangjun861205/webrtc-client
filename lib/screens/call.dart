@@ -25,6 +25,7 @@ class _CallScreen extends State<CallScreen> {
   late StreamSubscription sub;
   late MediaStream localStream;
   List<RTCIceCandidate> candidates = [];
+  bool isReady = false;
 
   // @override
   // void dispose() {
@@ -32,6 +33,24 @@ class _CallScreen extends State<CallScreen> {
   //   sub.cancel();
   //   super.dispose();
   // }
+
+  Future<void> _sendOffer() async {
+    final stream = await getUserMedia();
+    localStream = stream;
+    for (final track in stream.getVideoTracks()) {
+      await peerConn.addTrack(track, stream);
+    }
+    final offer = await peerConn
+        .createOffer({"offerToReceiveVideo": 1, "offerToReceiveAudio": 1});
+    await peerConn.setLocalDescription(offer);
+    WS.getOrCreateSink(widget.authToken).add(jsonEncode({
+          "Message": {
+            "to": widget.calleeID,
+            "content": jsonEncode(
+                {"typ": "Offer", "sdp": offer.sdp, "rtcType": offer.type}),
+          }
+        }));
+  }
 
   @override
   void initState() {
@@ -74,27 +93,9 @@ class _CallScreen extends State<CallScreen> {
     createConnection().then((conn) {
       peerConn = conn;
       peerConn.onIceCandidate = (candidate) => candidates.add(candidate);
-      getUserMedia().then((stream) {
-        localStream = stream;
-        for (final track in stream.getVideoTracks()) {
-          peerConn.addTrack(track, stream);
-        }
-        peerConn.createOffer(
-            {"offerToReceiveVideo": 1, "offerToReceiveAudio": 1}).then((offer) {
-          peerConn.setLocalDescription(offer).then((_) {
-            WS.getOrCreateSink(widget.authToken).add(jsonEncode({
-                  "Message": {
-                    "to": widget.calleeID,
-                    "content": jsonEncode({
-                      "typ": "Offer",
-                      "sdp": offer.sdp,
-                      "rtcType": offer.type
-                    }),
-                  }
-                }));
-          });
-        });
-      });
+      _sendOffer().then((_) => setState(() {
+            isReady = true;
+          }));
     });
     super.initState();
   }
@@ -103,33 +104,35 @@ class _CallScreen extends State<CallScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
         backgroundColor: Colors.black,
-        body: Padding(
-            padding: const EdgeInsets.only(top: 100, bottom: 100),
-            child: Align(
-                child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "Calling ${widget.calleeID}...",
-                  style: const TextStyle(color: Colors.white),
-                ),
-                ElevatedButton(
-                    onPressed: () {
-                      context.go("/");
-                    },
-                    style: ElevatedButton.styleFrom(
-                      shape: const CircleBorder(),
-                      backgroundColor: Colors.red,
+        body: !isReady
+            ? const CircularProgressIndicator()
+            : Padding(
+                padding: const EdgeInsets.only(top: 100, bottom: 100),
+                child: Align(
+                    child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Calling ${widget.calleeID}...",
+                      style: const TextStyle(color: Colors.white),
                     ),
-                    child: const Padding(
-                        padding: EdgeInsets.all(10),
-                        child: Icon(
-                          Icons.call_end,
-                          size: 50,
-                          color: Colors.white,
-                        )))
-              ],
-            ))));
+                    ElevatedButton(
+                        onPressed: () {
+                          context.go("/");
+                        },
+                        style: ElevatedButton.styleFrom(
+                          shape: const CircleBorder(),
+                          backgroundColor: Colors.red,
+                        ),
+                        child: const Padding(
+                            padding: EdgeInsets.all(10),
+                            child: Icon(
+                              Icons.call_end,
+                              size: 50,
+                              color: Colors.white,
+                            )))
+                  ],
+                ))));
   }
 }
