@@ -24,15 +24,7 @@ class _CallScreen extends State<CallScreen> {
   late RTCPeerConnection peerConn;
   late StreamSubscription sub;
   late MediaStream localStream;
-  List<RTCIceCandidate> candidates = [];
   bool isReady = false;
-
-  // @override
-  // void dispose() {
-  //   peerConn.close();
-  //   sub.cancel();
-  //   super.dispose();
-  // }
 
   Future<MediaStream> _sendOffer() async {
     final stream = await getUserMedia();
@@ -52,25 +44,6 @@ class _CallScreen extends State<CallScreen> {
     return stream;
   }
 
-  Future<void> _sendCandidates() async {
-    for (final candidate in candidates) {
-      WS.getOrCreateSink(widget.authToken).add(jsonEncode({
-            "Message": {
-              "to": widget.calleeID,
-              "content": jsonEncode({
-                "typ": "IceCandidate",
-                "calleeId": widget.calleeID,
-                "iceCandidate": {
-                  "id": candidate.sdpMid,
-                  "label": candidate.sdpMLineIndex,
-                  "candidate": candidate.candidate,
-                }
-              })
-            }
-          }));
-    }
-  }
-
   @override
   void initState() {
     sub = WS.getOrCreateStream(widget.authToken).listen((event) {
@@ -82,23 +55,19 @@ class _CallScreen extends State<CallScreen> {
             final description =
                 RTCSessionDescription(content["sdp"], content["rtcType"]);
             peerConn.setRemoteDescription(description).then((_) {
-              _sendCandidates().then((_) {
-                context.go("/video",
-                    extra: {"localStream": localStream, "peerConn": peerConn});
-              });
+              context.go("/video",
+                  extra: {"localStream": localStream, "peerConn": peerConn});
             });
           case "Refuse":
             peerConn.close();
             sub.cancel();
             context.go("/");
-          case "ReadyForIceCandidates":
-            _sendCandidates();
         }
       }
     });
-    createConnection().then((conn) {
+    createConnection(widget.calleeID).then((conn) {
       peerConn = conn;
-      peerConn.onIceCandidate = (candidate) => candidates.add(candidate);
+      // peerConn.onIceCandidate = (candidate) => candidates.add(candidate);
       _sendOffer().then((localStream) => setState(() {
             localStream = localStream;
             isReady = true;

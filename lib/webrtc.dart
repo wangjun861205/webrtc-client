@@ -1,7 +1,10 @@
-import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'dart:convert';
 
-Future<RTCPeerConnection> createConnection() async {
-  return await createPeerConnection({
+import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:webrtc_client/main.dart';
+
+Future<RTCPeerConnection> createConnection(String peerID) async {
+  final peerConn = await createPeerConnection({
     "iceServers": [
       {"url": "stun:stun.l.google.com:19302"},
     ]
@@ -11,6 +14,22 @@ Future<RTCPeerConnection> createConnection() async {
     },
     "optional": [],
   });
+  peerConn.onIceCandidate =
+      (candidate) => WS.getOrCreateSink(AuthToken.token).add(jsonEncode({
+            "Message": {
+              "to": peerID,
+              "content": jsonEncode({
+                "typ": "IceCandidate",
+                "calleeId": peerID,
+                "iceCandidate": {
+                  "id": candidate.sdpMid,
+                  "label": candidate.sdpMLineIndex,
+                  "candidate": candidate.candidate,
+                }
+              })
+            }
+          }));
+  return peerConn;
 }
 
 Future<MediaStream> getUserMedia() async {
