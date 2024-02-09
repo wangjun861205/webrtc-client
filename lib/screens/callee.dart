@@ -90,7 +90,6 @@ class _CalleeScreen extends State<CalleeScreen> {
                       ElevatedButton(
                         onPressed: () {
                           onAnswer().then((localStream) {
-                            sub.cancel();
                             context.go("/video", extra: {
                               "localStream": localStream,
                               "peerConn": peerConn
