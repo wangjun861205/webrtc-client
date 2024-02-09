@@ -27,6 +27,7 @@ class CalleeScreen extends StatefulWidget {
 class _CalleeScreen extends State<CalleeScreen> {
   late RTCPeerConnection peerConn;
   late StreamSubscription sub;
+  bool isReady = false;
 
   // @override
   // void dispose() {
@@ -50,7 +51,12 @@ class _CalleeScreen extends State<CalleeScreen> {
         }
       }
     });
-    createConnection().then((conn) => peerConn = conn);
+    createConnection().then((conn) {
+      setState(() {
+        peerConn = conn;
+        isReady = true;
+      });
+    });
     super.initState();
   }
 
@@ -78,56 +84,60 @@ class _CalleeScreen extends State<CalleeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: Align(
-            child: Padding(
-                padding: const EdgeInsets.only(top: 100, bottom: 100),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(widget.callID),
-                    Row(children: [
-                      ElevatedButton(
-                        onPressed: () {
-                          onAnswer().then((localStream) {
-                            context.go("/video", extra: {
-                              "localStream": localStream,
-                              "peerConn": peerConn
-                            });
-                          });
-                        },
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            shape: const CircleBorder()),
-                        child: const Padding(
-                          padding: EdgeInsets.all(10),
-                          child: Icon(Icons.call),
-                        ),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          WS.getOrCreateSink(widget.authToken).add(jsonEncode({
-                                "Message": {
-                                  "to": widget.callID,
-                                  "content": jsonEncode({
-                                    "typ": "Refuse",
-                                  })
-                                }
-                              }));
-                          peerConn.close();
-                          sub.cancel();
-                          context.go("/");
-                        },
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                            shape: const CircleBorder()),
-                        child: const Padding(
-                          padding: EdgeInsets.all(10),
-                          child: Icon(Icons.call_end),
-                        ),
-                      )
-                    ])
-                  ],
-                ))));
+        body: !isReady
+            ? const CircularProgressIndicator()
+            : Align(
+                child: Padding(
+                    padding: const EdgeInsets.only(top: 100, bottom: 100),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(widget.callID),
+                        Row(children: [
+                          ElevatedButton(
+                            onPressed: () {
+                              onAnswer().then((localStream) {
+                                context.go("/video", extra: {
+                                  "localStream": localStream,
+                                  "peerConn": peerConn
+                                });
+                              });
+                            },
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                shape: const CircleBorder()),
+                            child: const Padding(
+                              padding: EdgeInsets.all(10),
+                              child: Icon(Icons.call),
+                            ),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              WS
+                                  .getOrCreateSink(widget.authToken)
+                                  .add(jsonEncode({
+                                    "Message": {
+                                      "to": widget.callID,
+                                      "content": jsonEncode({
+                                        "typ": "Refuse",
+                                      })
+                                    }
+                                  }));
+                              peerConn.close();
+                              sub.cancel();
+                              context.go("/");
+                            },
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                shape: const CircleBorder()),
+                            child: const Padding(
+                              padding: EdgeInsets.all(10),
+                              child: Icon(Icons.call_end),
+                            ),
+                          )
+                        ])
+                      ],
+                    ))));
   }
 }

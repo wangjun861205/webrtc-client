@@ -82,8 +82,10 @@ class _CallScreen extends State<CallScreen> {
             final description =
                 RTCSessionDescription(content["sdp"], content["rtcType"]);
             peerConn.setRemoteDescription(description).then((_) {
-              context.go("/video",
-                  extra: {"localStream": localStream, "peerConn": peerConn});
+              _sendCandidates().then((_) {
+                context.go("/video",
+                    extra: {"localStream": localStream, "peerConn": peerConn});
+              });
             });
           case "Refuse":
             peerConn.close();
