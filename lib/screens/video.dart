@@ -29,13 +29,13 @@ class _VideoScreen extends State<VideoScreen> {
   final RTCVideoRenderer remoteRenderer = RTCVideoRenderer();
   late StreamSubscription sub;
 
-  @override
-  void deactivate() {
-    for (final track in widget.localStream.getTracks()) {
-      track.stop();
-    }
-    super.deactivate();
-  }
+  // @override
+  // void deactivate() {
+  //   for (final track in widget.localStream.getTracks()) {
+  //     track.stop();
+  //   }
+  //   super.deactivate();
+  // }
 
   @override
   void initState() {
