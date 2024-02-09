@@ -62,7 +62,7 @@ class _CalleeScreen extends State<CalleeScreen> {
 
   Future<MediaStream> onAnswer() async {
     final localStream = await getUserMedia();
-    for (final track in localStream.getTracks()) {
+    for (final track in localStream.getVideoTracks()) {
       await peerConn.addTrack(track, localStream);
     }
     await peerConn.setRemoteDescription(widget.description);
