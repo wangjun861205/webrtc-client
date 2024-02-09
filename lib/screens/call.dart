@@ -52,6 +52,25 @@ class _CallScreen extends State<CallScreen> {
     return stream;
   }
 
+  Future<void> _sendCandidates() async {
+    for (final candidate in candidates) {
+      WS.getOrCreateSink(widget.authToken).add(jsonEncode({
+            "Message": {
+              "to": widget.calleeID,
+              "content": jsonEncode({
+                "typ": "IceCandidate",
+                "calleeId": widget.calleeID,
+                "iceCandidate": {
+                  "id": candidate.sdpMid,
+                  "label": candidate.sdpMLineIndex,
+                  "candidate": candidate.candidate,
+                }
+              })
+            }
+          }));
+    }
+  }
+
   @override
   void initState() {
     sub = WS.getOrCreateStream(widget.authToken).listen((event) {
@@ -63,23 +82,6 @@ class _CallScreen extends State<CallScreen> {
             final description =
                 RTCSessionDescription(content["sdp"], content["rtcType"]);
             peerConn.setRemoteDescription(description).then((_) {
-              for (final candidate in candidates) {
-                debugPrint(candidate.toString());
-                WS.getOrCreateSink(widget.authToken).add(jsonEncode({
-                      "Message": {
-                        "to": widget.calleeID,
-                        "content": jsonEncode({
-                          "typ": "IceCandidate",
-                          "calleeId": widget.calleeID,
-                          "iceCandidate": {
-                            "id": candidate.sdpMid,
-                            "label": candidate.sdpMLineIndex,
-                            "candidate": candidate.candidate,
-                          }
-                        })
-                      }
-                    }));
-              }
               context.go("/video",
                   extra: {"localStream": localStream, "peerConn": peerConn});
             });
@@ -87,6 +89,8 @@ class _CallScreen extends State<CallScreen> {
             peerConn.close();
             sub.cancel();
             context.go("/");
+          case "ReadyForIceCandidates":
+            _sendCandidates();
         }
       }
     });
