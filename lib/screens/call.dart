@@ -62,6 +62,12 @@ class _CallScreen extends State<CallScreen> {
             peerConn.close();
             sub.cancel();
             context.go("/");
+          case "IceCandidate":
+            final candidate = content["iceCandidate"]["candidate"];
+            final sdpMid = content["iceCandidate"]["id"];
+            final sdpMLineIndex = content["iceCandidate"]["label"];
+            peerConn.addCandidate(
+                RTCIceCandidate(candidate, sdpMid, sdpMLineIndex));
         }
       }
     });
