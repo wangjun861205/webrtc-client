@@ -76,7 +76,7 @@ class _CallScreen extends State<CallScreen> {
       peerConn.onIceCandidate = (candidate) => candidates.add(candidate);
       getUserMedia().then((stream) {
         localStream = stream;
-        for (final track in stream.getTracks()) {
+        for (final track in stream.getVideoTracks()) {
           peerConn.addTrack(track, stream);
         }
         peerConn.createOffer(

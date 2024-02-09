@@ -48,11 +48,13 @@ class _VideoScreen extends State<VideoScreen> {
       if (content["typ"] != "IceCandidate") {
         return;
       }
+      debugPrint(content["iceCandidate"].toString());
       final candidate = content["iceCandidate"]["candidate"];
       final sdpMid = content["iceCandidate"]["id"];
       final sdpMLineIndex = content["iceCandidate"]["label"];
       widget.peerConn
-          .addCandidate(RTCIceCandidate(candidate, sdpMid, sdpMLineIndex));
+          .addCandidate(RTCIceCandidate(candidate, sdpMid, sdpMLineIndex))
+          .then((_) => setState(() {}));
     });
     localRenderer.initialize().then((_) {
       localRenderer.srcObject = widget.localStream;
