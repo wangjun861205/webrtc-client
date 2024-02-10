@@ -173,6 +173,19 @@ class RTC {
     status = RTCStatus.canceled;
     afterCanceled?.call();
   }
+
+  refuse() async {
+    WS.getOrCreateSink(AuthToken.token).add(jsonEncode({
+          "Message": {
+            "to": peerID,
+            "content": jsonEncode({
+              "typ": "Refuse",
+            })
+          }
+        }));
+    status = RTCStatus.refused;
+    afterRefused?.call();
+  }
 }
 
 Future<RTCPeerConnection> createConnection(String peerID) async {

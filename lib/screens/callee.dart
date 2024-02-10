@@ -20,6 +20,7 @@ class _CalleeScreen extends State<CalleeScreen> {
     widget.rtc.afterAnswered =
         () => context.go("/video", extra: {"rtc": widget.rtc});
     widget.rtc.afterCanceled = () => context.go("/");
+    widget.rtc.afterRefused = () => context.go("/");
     super.initState();
   }
 
@@ -55,8 +56,7 @@ class _CalleeScreen extends State<CalleeScreen> {
                         ),
                         ElevatedButton(
                           onPressed: () {
-                            // widget.rtc.dispose();
-                            context.go("/");
+                            widget.rtc.refuse();
                           },
                           style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.red,
