@@ -1,22 +1,13 @@
-import 'dart:async';
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:webrtc_client/components/video_view.dart';
-import 'package:webrtc_client/main.dart';
+import 'package:webrtc_client/webrtc.dart';
 
 class VideoScreen extends StatefulWidget {
   final String authToken;
-  final MediaStream localStream;
-  final RTCPeerConnection peerConn;
+  final RTC rtc;
 
-  const VideoScreen(
-      {required this.authToken,
-      required this.localStream,
-      required this.peerConn,
-      super.key});
+  const VideoScreen({required this.authToken, required this.rtc, super.key});
 
   @override
   State<StatefulWidget> createState() {
@@ -25,61 +16,16 @@ class VideoScreen extends StatefulWidget {
 }
 
 class _VideoScreen extends State<VideoScreen> {
-  final RTCVideoRenderer localRenderer = RTCVideoRenderer();
-  final RTCVideoRenderer remoteRenderer = RTCVideoRenderer();
-  late StreamSubscription sub;
-
-  // @override
-  // void deactivate() {
-  //   for (final track in widget.localStream.getTracks()) {
-  //     track.stop();
-  //   }
-  //   super.deactivate();
-  // }
-
-  @override
-  void initState() {
-    // sub = WS.getOrCreateStream(widget.authToken).listen((event) {
-    //   final msg = jsonDecode(event);
-    //   if (msg["typ"] != "Message") {
-    //     return;
-    //   }
-    //   final content = jsonDecode(msg["data"]["content"]);
-    //   if (content["typ"] != "IceCandidate") {
-    //     return;
-    //   }
-    //   debugPrint(content["iceCandidate"].toString());
-    //   final candidate = content["iceCandidate"]["candidate"];
-    //   final sdpMid = content["iceCandidate"]["id"];
-    //   final sdpMLineIndex = content["iceCandidate"]["label"];
-    //   widget.peerConn
-    //       .addCandidate(RTCIceCandidate(candidate, sdpMid, sdpMLineIndex));
-    // });
-
-    localRenderer.initialize();
-    remoteRenderer.initialize();
-    localRenderer.srcObject = widget.localStream;
-    final remoteStreams = widget.peerConn.getRemoteStreams();
-    remoteRenderer.srcObject = remoteStreams[0];
-    widget.peerConn.onTrack = (event) {
-      remoteRenderer.srcObject = event.streams[0];
-      setState(() {});
-    };
-    super.initState();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         body: Stack(children: [
       Column(
         children: [
-          Flexible(flex: 5, child: VideoView(renderer: localRenderer)),
           Flexible(
-              flex: 5,
-              child: remoteRenderer.srcObject == null
-                  ? const Text("aaaaa")
-                  : VideoView(renderer: remoteRenderer))
+              flex: 5, child: VideoView(renderer: widget.rtc.localRenderer!)),
+          Flexible(
+              flex: 5, child: VideoView(renderer: widget.rtc.remoteRenderer!))
         ],
       ),
       Positioned(
@@ -89,10 +35,7 @@ class _VideoScreen extends State<VideoScreen> {
             style: ElevatedButton.styleFrom(
                 shape: const CircleBorder(), backgroundColor: Colors.red),
             onPressed: () {
-              // localRenderer.dispose();
-              // remoteRenderer.dispose();
-              // widget.localStream.dispose();
-              // widget.peerConn.close();
+              widget.rtc.dispose();
               context.go("/");
             },
             child: const Icon(Icons.call_end),

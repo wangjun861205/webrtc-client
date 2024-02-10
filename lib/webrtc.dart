@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:webrtc_client/main.dart';
 
@@ -16,18 +15,25 @@ enum RTCStatus {
 
 class RTC {
   String? peerID;
-  RTCStatus status = RTCStatus.uninitated;
-  RTCVideoRenderer? localRenderer;
-  RTCVideoRenderer? remoteRenderer;
-  RTCPeerConnection? peerConnection;
-  StreamSubscription? sub;
   Function()? afterInitated;
   Function()? afterOffering;
   Function()? afterBeingCalled;
   Function()? afterAnswered;
   Function()? afterRefused;
+  RTCStatus status = RTCStatus.uninitated;
+  RTCVideoRenderer? localRenderer;
+  RTCVideoRenderer? remoteRenderer;
+  RTCPeerConnection? peerConnection;
+  StreamSubscription? sub;
 
-  RTC();
+  RTC({
+    this.peerID,
+    this.afterInitated,
+    this.afterOffering,
+    this.afterBeingCalled,
+    this.afterAnswered,
+    this.afterRefused,
+  });
 
   init() async {
     peerConnection?.close();
@@ -68,6 +74,7 @@ class RTC {
     }
     await _mountWSHandlers();
     status = RTCStatus.initated;
+    afterInitated?.call();
   }
 
   _mountWSHandlers() async {
@@ -119,7 +126,7 @@ class RTC {
     final offer = await peerConnection!.createOffer();
     WS.getOrCreateSink(AuthToken.token).add(jsonEncode({
           "Message": {
-            "to": peerConnection,
+            "to": peerID,
             "content": jsonEncode(
                 {"typ": "Offer", "sdp": offer.sdp, "rtcType": offer.type}),
           }

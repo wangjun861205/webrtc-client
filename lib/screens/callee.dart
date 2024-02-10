@@ -1,22 +1,12 @@
-import 'dart:async';
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:webrtc_client/main.dart';
 import 'package:webrtc_client/webrtc.dart';
 
 class CalleeScreen extends StatefulWidget {
   final String authToken;
-  final String callID;
-  final RTCSessionDescription description;
+  final RTC rtc;
 
-  const CalleeScreen(
-      {required this.authToken,
-      required this.callID,
-      required this.description,
-      super.key});
+  const CalleeScreen({required this.authToken, required this.rtc, super.key});
 
   @override
   State<StatefulWidget> createState() {
@@ -25,120 +15,51 @@ class CalleeScreen extends StatefulWidget {
 }
 
 class _CalleeScreen extends State<CalleeScreen> {
-  late RTCPeerConnection peerConn;
-  late StreamSubscription sub;
-  bool isReady = false;
-
-  // @override
-  // void dispose() {
-  //   peerConn.close();
-  //   sub.cancel();
-  //   super.dispose();
-  // }
-
   @override
   void initState() {
-    sub = WS.getOrCreateStream(widget.authToken).listen((event) {
-      final msg = jsonDecode(event);
-      if (msg["typ"] == "Message") {
-        final content = jsonDecode(msg["data"]["content"]);
-        if (content["typ"] == "IceCandidate") {
-          final candidate = content["iceCandidate"]["candidate"];
-          final sdpMid = content["iceCandidate"]["id"];
-          final sdpMLineIndex = content["iceCandidate"]["label"];
-          peerConn
-              .addCandidate(RTCIceCandidate(candidate, sdpMid, sdpMLineIndex));
-        }
-      }
-    });
-    createConnection(widget.callID).then((conn) {
-      setState(() {
-        peerConn = conn;
-        isReady = true;
-      });
-    });
+    widget.rtc.afterAnswered =
+        () => context.go("/video", extra: {"rtc": widget.rtc});
     super.initState();
-  }
-
-  Future<MediaStream> onAnswer() async {
-    final localStream = await getUserMedia();
-    for (final track in localStream.getVideoTracks()) {
-      await peerConn.addTrack(track, localStream);
-    }
-    await peerConn.setRemoteDescription(widget.description);
-    // final answer = await peerConn.createAnswer({"offerToReceiveVideo": 1});
-    final answer = await peerConn.createAnswer();
-    await peerConn.setLocalDescription(answer);
-    WS.getOrCreateSink(widget.authToken).add(jsonEncode({
-          "Message": {
-            "to": widget.callID,
-            "content": jsonEncode({
-              "typ": "Answer",
-              "sdp": answer.sdp,
-              "rtcType": answer.type,
-            })
-          }
-        }));
-    return localStream;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        body: !isReady
-            ? const CircularProgressIndicator()
-            : Align(
-                child: Padding(
-                    padding: const EdgeInsets.only(top: 100, bottom: 100),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(widget.callID),
-                        Row(children: [
-                          ElevatedButton(
-                            onPressed: () {
-                              onAnswer().then((localStream) {
-                                context.go("/video", extra: {
-                                  "localStream": localStream,
-                                  "peerConn": peerConn
-                                });
-                              });
-                            },
-                            style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
-                                shape: const CircleBorder()),
-                            child: const Padding(
-                              padding: EdgeInsets.all(10),
-                              child: Icon(Icons.call),
-                            ),
-                          ),
-                          ElevatedButton(
-                            onPressed: () {
-                              WS
-                                  .getOrCreateSink(widget.authToken)
-                                  .add(jsonEncode({
-                                    "Message": {
-                                      "to": widget.callID,
-                                      "content": jsonEncode({
-                                        "typ": "Refuse",
-                                      })
-                                    }
-                                  }));
-                              peerConn.close();
-                              sub.cancel();
-                              context.go("/");
-                            },
-                            style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red,
-                                shape: const CircleBorder()),
-                            child: const Padding(
-                              padding: EdgeInsets.all(10),
-                              child: Icon(Icons.call_end),
-                            ),
-                          )
-                        ])
-                      ],
-                    ))));
+    return Align(
+        child: Padding(
+            padding: const EdgeInsets.only(top: 100, bottom: 100),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(widget.rtc.peerID!),
+                Row(children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      widget.rtc.answer();
+                    },
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        shape: const CircleBorder()),
+                    child: const Padding(
+                      padding: EdgeInsets.all(10),
+                      child: Icon(Icons.call),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      widget.rtc.dispose();
+                      context.go("/");
+                    },
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        shape: const CircleBorder()),
+                    child: const Padding(
+                      padding: EdgeInsets.all(10),
+                      child: Icon(Icons.call_end),
+                    ),
+                  )
+                ])
+              ],
+            )));
   }
 }

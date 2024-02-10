@@ -7,8 +7,13 @@ import 'package:webrtc_client/components/call_nav_button.dart';
 class FriendsList extends StatefulWidget {
   final int limit;
   final String authToken;
+  final Function(String id) onCall;
 
-  const FriendsList({required this.limit, required this.authToken, super.key});
+  const FriendsList(
+      {required this.limit,
+      required this.authToken,
+      required this.onCall,
+      super.key});
 
   @override
   State<StatefulWidget> createState() {
@@ -56,7 +61,7 @@ class _FriendsList extends State<FriendsList> {
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           const Icon(Icons.chevron_right),
-                          CallNavButton(calleeID: item.id),
+                          CallNavButton(onPress: () => widget.onCall(item.id)),
                         ]),
                   ),
                   onTap: () {

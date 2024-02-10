@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 class CallNavButton extends StatefulWidget {
-  final String calleeID;
+  final Function() onPress;
 
-  const CallNavButton({required this.calleeID, super.key});
+  const CallNavButton({required this.onPress, super.key});
 
   @override
   State<StatefulWidget> createState() {
@@ -17,7 +16,7 @@ class _CallNavButton extends State<CallNavButton> {
   Widget build(BuildContext context) {
     return IconButton(
         onPressed: () {
-          context.go("/call/${widget.calleeID}");
+          widget.onPress();
         },
         icon: const Icon(Icons.call));
   }

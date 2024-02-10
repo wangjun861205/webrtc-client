@@ -98,20 +98,18 @@ class MyApp extends StatelessWidget {
                 return MeScreen(authToken: AuthToken.token);
               }),
           GoRoute(
-              path: "/call/:calleeID",
+              path: "/call",
               builder: (context, state) {
                 return CallScreen(
                     authToken: AuthToken.token,
-                    calleeID: state.pathParameters["calleeID"]!);
+                    rtc: (state.extra as Map<String, dynamic>)["rtc"]);
               }),
           GoRoute(
-              path: "/callee/:callID",
+              path: "/callee",
               builder: (context, state) {
                 return CalleeScreen(
                   authToken: AuthToken.token,
-                  callID: state.pathParameters["callID"]!,
-                  description:
-                      (state.extra! as Map<String, dynamic>)["description"],
+                  rtc: (state.extra as Map<String, dynamic>)["rtc"],
                 );
               }),
           GoRoute(
@@ -119,9 +117,9 @@ class MyApp extends StatelessWidget {
               builder: (context, state) {
                 final extra = state.extra as Map<String, dynamic>;
                 return VideoScreen(
-                    authToken: AuthToken.token,
-                    localStream: extra["localStream"],
-                    peerConn: extra["peerConn"]);
+                  authToken: AuthToken.token,
+                  rtc: extra["rtc"],
+                );
               })
         ],
         redirect: (context, state) async {
