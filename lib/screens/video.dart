@@ -35,7 +35,7 @@ class _VideoScreen extends State<VideoScreen> {
             style: ElevatedButton.styleFrom(
                 shape: const CircleBorder(), backgroundColor: Colors.red),
             onPressed: () {
-              widget.rtc.dispose();
+              // widget.rtc.dispose();
               context.go("/");
             },
             child: const Icon(Icons.call_end),

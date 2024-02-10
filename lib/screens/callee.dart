@@ -47,7 +47,7 @@ class _CalleeScreen extends State<CalleeScreen> {
                   ),
                   ElevatedButton(
                     onPressed: () {
-                      widget.rtc.dispose();
+                      // widget.rtc.dispose();
                       context.go("/");
                     },
                     style: ElevatedButton.styleFrom(

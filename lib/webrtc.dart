@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:webrtc_client/main.dart';
 
@@ -86,7 +87,8 @@ class RTC {
       final content = jsonDecode(json["data"]["content"]);
       switch (content["typ"]) {
         case "Offer":
-          peerID = json["from"];
+          debugPrint(event);
+          peerID = json["data"]["from"];
           final offer =
               RTCSessionDescription(content["sdp"], content["rtcType"]);
           await peerConnection!.setRemoteDescription(offer);
