@@ -126,6 +126,7 @@ class RTC {
 
   offer() async {
     final offer = await peerConnection!.createOffer();
+    await peerConnection!.setLocalDescription(offer);
     WS.getOrCreateSink(AuthToken.token).add(jsonEncode({
           "Message": {
             "to": peerID,
