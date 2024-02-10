@@ -55,7 +55,9 @@ class _HomeScreen extends State<HomeScreen> {
               authToken: widget.authToken,
               onCall: (String id) {
                 rtc.peerID = id;
-                context.go("/call", extra: {"rtc": rtc});
+                rtc.afterOffering =
+                    () => context.go("/call", extra: {"rtc": rtc});
+                rtc.offer();
               },
             ),
           ),

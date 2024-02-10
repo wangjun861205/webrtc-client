@@ -1,6 +1,3 @@
-import 'dart:async';
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:webrtc_client/webrtc.dart';
@@ -20,13 +17,8 @@ class CallScreen extends StatefulWidget {
 class _CallScreen extends State<CallScreen> {
   @override
   void initState() {
-    widget.rtc.afterInitated = () {
-      widget.rtc.offer();
-      setState(() {});
-    };
     widget.rtc.afterAnswered =
         () => context.go("/video", extra: {"rtc": widget.rtc});
-    widget.rtc.init();
     super.initState();
   }
 
