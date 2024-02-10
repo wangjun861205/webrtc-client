@@ -17,8 +17,10 @@ class CallScreen extends StatefulWidget {
 class _CallScreen extends State<CallScreen> {
   @override
   void initState() {
+    widget.rtc.afterRefused = () => context.go("/");
     widget.rtc.afterAnswered =
         () => context.go("/video", extra: {"rtc": widget.rtc});
+    widget.rtc.afterCanceled = () => context.go("/");
     super.initState();
   }
 
@@ -44,8 +46,7 @@ class _CallScreen extends State<CallScreen> {
                 ),
                 ElevatedButton(
                     onPressed: () {
-                      // widget.rtc.dispose();
-                      context.go("/");
+                      widget.rtc.cancel();
                     },
                     style: ElevatedButton.styleFrom(
                       shape: const CircleBorder(),

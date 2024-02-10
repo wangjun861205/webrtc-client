@@ -12,6 +12,7 @@ enum RTCStatus {
   beingCalled,
   answered,
   refused,
+  canceled,
 }
 
 class RTC {
@@ -21,6 +22,7 @@ class RTC {
   Function()? afterBeingCalled;
   Function()? afterAnswered;
   Function()? afterRefused;
+  Function()? afterCanceled;
   RTCStatus status = RTCStatus.uninitated;
   RTCVideoRenderer? localRenderer;
   RTCVideoRenderer? remoteRenderer;
@@ -110,6 +112,9 @@ class RTC {
           final sdpMLineIndex = content["iceCandidate"]["label"];
           peerConnection!
               .addCandidate(RTCIceCandidate(candidate, sdpMid, sdpMLineIndex));
+        case "Cancel":
+          status = RTCStatus.canceled;
+          afterCanceled?.call();
       }
     });
   }
@@ -154,6 +159,19 @@ class RTC {
         }));
     status = RTCStatus.answered;
     afterAnswered?.call();
+  }
+
+  cancel() async {
+    WS.getOrCreateSink(AuthToken.token).add(jsonEncode({
+          "Message": {
+            "to": peerID,
+            "content": jsonEncode({
+              "typ": "Cancel",
+            })
+          }
+        }));
+    status = RTCStatus.canceled;
+    afterCanceled?.call();
   }
 }
 
