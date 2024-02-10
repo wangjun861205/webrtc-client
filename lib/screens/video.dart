@@ -34,17 +34,17 @@ class _VideoScreen extends State<VideoScreen> {
               flex: 5, child: VideoView(renderer: widget.rtc.remoteRenderer!))
         ],
       ),
-      Positioned(
-          top: MediaQuery.of(context).size.height * 0.5,
-          left: MediaQuery.of(context).size.width * 0.5,
+      Center(
           child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-                shape: const CircleBorder(), backgroundColor: Colors.red),
-            onPressed: () {
-              widget.rtc.close();
-            },
-            child: const Icon(Icons.call_end),
-          )),
+              style: ElevatedButton.styleFrom(
+                  shape: const CircleBorder(), backgroundColor: Colors.red),
+              onPressed: () {
+                widget.rtc.close();
+              },
+              child: const Padding(
+                padding: EdgeInsets.all(10),
+                child: Icon(Icons.call_end),
+              ))),
     ]));
   }
 }
