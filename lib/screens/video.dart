@@ -55,22 +55,16 @@ class _VideoScreen extends State<VideoScreen> {
     //   widget.peerConn
     //       .addCandidate(RTCIceCandidate(candidate, sdpMid, sdpMLineIndex));
     // });
-    localRenderer.initialize().then((_) {
-      setState(() {
-        localRenderer.srcObject = widget.localStream;
-      });
-    });
+
+    localRenderer.initialize();
+    remoteRenderer.initialize();
+    localRenderer.srcObject = widget.localStream;
+    final remoteStreams = widget.peerConn.getRemoteStreams();
+    remoteRenderer.srcObject = remoteStreams[0];
     widget.peerConn.onTrack = (event) {
-      setState(() {
-        remoteRenderer.srcObject = event.streams[0];
-      });
+      remoteRenderer.srcObject = event.streams[0];
+      setState(() {});
     };
-    remoteRenderer.initialize().then((_) {
-      final remoteStreams = widget.peerConn.getRemoteStreams();
-      setState(() {
-        remoteRenderer.srcObject = remoteStreams[0];
-      });
-    });
     super.initState();
   }
 

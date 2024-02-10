@@ -74,11 +74,11 @@ class _HomeScreen extends State<HomeScreen> {
     return pc;
   }
 
-  @override
-  void deactivate() async {
-    super.deactivate();
-    sub?.cancel();
-  }
+  // @override
+  // void deactivate() async {
+  //   super.deactivate();
+  //   sub?.cancel();
+  // }
 
   @override
   initState() {

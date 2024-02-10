@@ -75,7 +75,7 @@ class _CallScreen extends State<CallScreen> {
       peerConn = conn;
       // peerConn.onIceCandidate = (candidate) => candidates.add(candidate);
       _sendOffer().then((localStream) => setState(() {
-            localStream = localStream;
+            // localStream = localStream;
             isReady = true;
           }));
     });
