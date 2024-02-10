@@ -18,7 +18,7 @@ class VideoScreen extends StatefulWidget {
 class _VideoScreen extends State<VideoScreen> {
   @override
   void initState() {
-    widget.rtc.afterCanceled = () => context.go("/");
+    widget.rtc.afterClosed = () => context.go("/");
     super.initState();
   }
 
@@ -41,7 +41,7 @@ class _VideoScreen extends State<VideoScreen> {
             style: ElevatedButton.styleFrom(
                 shape: const CircleBorder(), backgroundColor: Colors.red),
             onPressed: () {
-              widget.rtc.cancel();
+              widget.rtc.close();
             },
             child: const Icon(Icons.call_end),
           )),

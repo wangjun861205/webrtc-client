@@ -13,6 +13,7 @@ enum RTCStatus {
   answered,
   refused,
   canceled,
+  closed,
 }
 
 class RTC {
@@ -23,6 +24,7 @@ class RTC {
   Function()? afterAnswered;
   Function()? afterRefused;
   Function()? afterCanceled;
+  Function()? afterClosed;
   RTCStatus status = RTCStatus.uninitated;
   RTCVideoRenderer? localRenderer;
   RTCVideoRenderer? remoteRenderer;
@@ -36,6 +38,8 @@ class RTC {
     this.afterBeingCalled,
     this.afterAnswered,
     this.afterRefused,
+    this.afterCanceled,
+    this.afterClosed,
   });
 
   init() async {
@@ -71,11 +75,6 @@ class RTC {
             }
           }));
     };
-    final localStream = await getUserMedia();
-    for (final track in localStream.getVideoTracks()) {
-      await peerConnection!.addTrack(track, localStream);
-    }
-    localRenderer!.srcObject = localStream;
     await _mountWSHandlers();
     status = RTCStatus.initated;
     afterInitated?.call();
@@ -115,22 +114,30 @@ class RTC {
         case "Cancel":
           status = RTCStatus.canceled;
           afterCanceled?.call();
+        case "Close":
+          status = RTCStatus.closed;
+          afterClosed?.call();
       }
     });
   }
 
-  dispose() {
+  _stopStreams() {
     localRenderer?.srcObject?.getTracks().forEach((element) {
       element.stop();
     });
+    localRenderer?.srcObject = null;
     remoteRenderer?.srcObject?.getTracks().forEach((element) {
       element.stop();
     });
-    sub?.cancel();
-    peerConnection?.close();
+    remoteRenderer?.srcObject = null;
   }
 
   offer() async {
+    final localStream = await getUserMedia();
+    for (final track in localStream.getVideoTracks()) {
+      await peerConnection!.addTrack(track, localStream);
+    }
+    localRenderer!.srcObject = localStream;
     final offer = await peerConnection!.createOffer();
     await peerConnection!.setLocalDescription(offer);
     WS.getOrCreateSink(AuthToken.token).add(jsonEncode({
@@ -145,6 +152,11 @@ class RTC {
   }
 
   answer() async {
+    final localStream = await getUserMedia();
+    for (final track in localStream.getVideoTracks()) {
+      await peerConnection!.addTrack(track, localStream);
+    }
+    localRenderer!.srcObject = localStream;
     final answer = await peerConnection!.createAnswer();
     peerConnection!.setLocalDescription(answer);
     WS.getOrCreateSink(AuthToken.token).add(jsonEncode({
@@ -171,6 +183,7 @@ class RTC {
           }
         }));
     status = RTCStatus.canceled;
+    _stopStreams();
     afterCanceled?.call();
   }
 
@@ -184,7 +197,22 @@ class RTC {
           }
         }));
     status = RTCStatus.refused;
+    _stopStreams();
     afterRefused?.call();
+  }
+
+  close() async {
+    WS.getOrCreateSink(AuthToken.token).add(jsonEncode({
+          "Message": {
+            "to": peerID,
+            "content": jsonEncode({
+              "typ": "Close",
+            })
+          }
+        }));
+    status = RTCStatus.closed;
+    _stopStreams();
+    afterClosed?.call();
   }
 }
 

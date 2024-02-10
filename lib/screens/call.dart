@@ -25,6 +25,14 @@ class _CallScreen extends State<CallScreen> {
   }
 
   @override
+  void dispose() {
+    widget.rtc.afterRefused = null;
+    widget.rtc.afterAnswered = null;
+    widget.rtc.afterCanceled = null;
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     if (widget.rtc.status == RTCStatus.uninitated) {
       return const Center(
