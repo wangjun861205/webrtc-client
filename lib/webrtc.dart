@@ -73,6 +73,7 @@ class RTC {
     for (final track in localStream.getVideoTracks()) {
       await peerConnection!.addTrack(track, localStream);
     }
+    localRenderer!.srcObject = localStream;
     await _mountWSHandlers();
     status = RTCStatus.initated;
     afterInitated?.call();
