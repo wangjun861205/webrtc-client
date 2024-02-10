@@ -23,6 +23,13 @@ class _HomeScreen extends State<HomeScreen> {
   RTC rtc = RTC();
 
   @override
+  void dispose() {
+    rtc.afterInitated = null;
+    rtc.afterBeingCalled = null;
+    super.dispose();
+  }
+
+  @override
   initState() {
     rtc.afterInitated = () => setState(() {});
     rtc.afterBeingCalled = () => context.go("/callee", extra: {"rtc": rtc});

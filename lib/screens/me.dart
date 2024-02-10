@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:webrtc_client/components/avatar_group.dart';
 
 class MeScreen extends StatefulWidget {
@@ -16,11 +17,17 @@ class _MeScreen extends State<MeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text("Me"),
-          centerTitle: true,
-        ),
-        body: Column(
-          children: [AvatarGroup(authToken: widget.authToken)],
+            title: const Text("Me"),
+            centerTitle: true,
+            leading: IconButton(
+              onPressed: () => context.go("/"),
+              icon: const Icon(Icons.chevron_left),
+            )),
+        body: Align(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [AvatarGroup(authToken: widget.authToken)],
+          ),
         ));
   }
 }

@@ -42,13 +42,7 @@ class RTC {
     this.afterClosed,
   });
 
-  init() async {
-    peerConnection?.close();
-    localRenderer = RTCVideoRenderer();
-    await localRenderer!.initialize();
-    remoteRenderer = RTCVideoRenderer();
-    await remoteRenderer!.initialize();
-
+  _initConnection() async {
     peerConnection = await createPeerConnection(
       {
         "iceServers": [
@@ -75,6 +69,15 @@ class RTC {
             }
           }));
     };
+  }
+
+  init() async {
+    peerConnection?.close();
+    localRenderer = RTCVideoRenderer();
+    await localRenderer!.initialize();
+    remoteRenderer = RTCVideoRenderer();
+    await remoteRenderer!.initialize();
+    await _initConnection();
     await _mountWSHandlers();
     status = RTCStatus.initated;
     afterInitated?.call();
@@ -121,7 +124,7 @@ class RTC {
     });
   }
 
-  _stopStreams() {
+  _dispose() async {
     localRenderer?.srcObject?.getTracks().forEach((element) {
       element.stop();
     });
@@ -130,6 +133,8 @@ class RTC {
       element.stop();
     });
     remoteRenderer?.srcObject = null;
+    await sub?.cancel();
+    await peerConnection?.close();
   }
 
   offer() async {
@@ -183,7 +188,7 @@ class RTC {
           }
         }));
     status = RTCStatus.canceled;
-    _stopStreams();
+    _dispose();
     afterCanceled?.call();
   }
 
@@ -197,7 +202,7 @@ class RTC {
           }
         }));
     status = RTCStatus.refused;
-    _stopStreams();
+    _dispose();
     afterRefused?.call();
   }
 
@@ -211,7 +216,7 @@ class RTC {
           }
         }));
     status = RTCStatus.closed;
-    _stopStreams();
+    _dispose();
     afterClosed?.call();
   }
 }

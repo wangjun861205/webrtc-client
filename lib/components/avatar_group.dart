@@ -17,6 +17,8 @@ class AvatarGroup extends StatefulWidget {
 }
 
 class _AvatarGroup extends State<AvatarGroup> {
+  int seq = 0;
+
   void showError(Object err) {
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(err.toString())));
@@ -28,10 +30,10 @@ class _AvatarGroup extends State<AvatarGroup> {
       children: [
         CircleAvatar(
           radius: 50,
-          backgroundImage: NetworkImage(
-            "http://${Config.backendDomain}/apis/v1/me/avatar",
+          backgroundImage: Image.network(
+            "http://${Config.backendDomain}/apis/v1/me/avatar?nonce=$seq",
             headers: {"X-Auth-Token": widget.authToken},
-          ),
+          ).image,
         ),
         ElevatedButton(
             onPressed: () {
@@ -43,7 +45,9 @@ class _AvatarGroup extends State<AvatarGroup> {
                         (id) => upsertAvatar(
                                     authToken: widget.authToken, uploadID: id)
                                 .then((_) {
-                              setState(() {});
+                              setState(() {
+                                seq++;
+                              });
                             }, onError: (err) => showError(err)),
                         onError: (err) => showError(err));
                   }, onError: (err) => showError(err));
