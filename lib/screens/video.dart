@@ -17,6 +17,12 @@ class VideoScreen extends StatefulWidget {
 
 class _VideoScreen extends State<VideoScreen> {
   @override
+  void initState() {
+    widget.rtc.afterCanceled = () => context.go("/");
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
         body: Stack(children: [
@@ -35,8 +41,7 @@ class _VideoScreen extends State<VideoScreen> {
             style: ElevatedButton.styleFrom(
                 shape: const CircleBorder(), backgroundColor: Colors.red),
             onPressed: () {
-              // widget.rtc.dispose();
-              context.go("/");
+              widget.rtc.cancel();
             },
             child: const Icon(Icons.call_end),
           )),
