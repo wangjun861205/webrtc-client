@@ -28,6 +28,7 @@ class Config {
 }
 
 class WS {
+  static StreamController? _ctrl;
   static Sink? _sink;
   static Stream? _stream;
 
@@ -35,10 +36,10 @@ class WS {
     _sink?.close();
     final ws = WebSocketChannel.connect(
         Uri.parse("ws://${Config.backendDomain}/ws?auth_token=$authToken"));
-    final ctrl = StreamController.broadcast();
-    ctrl.addStream(ws.stream);
+    _ctrl = StreamController.broadcast();
+    _ctrl!.addStream(ws.stream);
     _sink = ws.sink;
-    _stream = ctrl.stream;
+    _stream = _ctrl!.stream;
   }
 
   static Stream getOrCreateStream(String authToken) {
@@ -49,10 +50,16 @@ class WS {
   }
 
   static Sink getOrCreateSink(String authToken) {
-    if (_stream == null) {
+    if (_sink == null) {
       setWS(authToken);
     }
     return _sink!;
+  }
+
+  static close() {
+    _sink?.close();
+    _sink = null;
+    _ctrl?.close();
   }
 }
 
@@ -68,8 +75,8 @@ void main() async {
   runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
-  late GoRouter route;
+class MyApp extends StatefulWidget {
+  late final GoRouter route;
 
   MyApp({super.key}) {
     route = GoRouter(
@@ -135,6 +142,33 @@ class MyApp extends StatelessWidget {
           return null;
         });
   }
+  @override
+  State<StatefulWidget> createState() {
+    return _MyApp();
+  }
+}
+
+class _MyApp extends State<MyApp> {
+  _onStateChange(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.hidden ||
+            AppLifecycleState.paused ||
+            AppLifecycleState.detached:
+        WS.close();
+      default:
+        if (AuthToken.token == null) {
+          context.go("/login");
+          return;
+        }
+        WS.setWS(AuthToken.token!);
+    }
+  }
+
+  @override
+  void initState() {
+    AppLifecycleListener(onStateChange: _onStateChange);
+    super.initState();
+  }
 
   // This widget is the root of your application.
   @override
@@ -144,7 +178,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      routerConfig: route,
+      routerConfig: widget.route,
     );
   }
 }
