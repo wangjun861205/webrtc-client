@@ -153,7 +153,8 @@ class _MyApp extends State<MyApp> {
     switch (state) {
       case AppLifecycleState.hidden ||
             AppLifecycleState.paused ||
-            AppLifecycleState.detached:
+            AppLifecycleState.detached ||
+            AppLifecycleState.inactive:
         WS.close();
       default:
         if (AuthToken.token == null) {
