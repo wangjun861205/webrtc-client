@@ -2,13 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:sdp_transform/sdp_transform.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:go_router/go_router.dart';
-import 'package:webrtc_client/blocs/ws.dart';
 import 'package:webrtc_client/screens/call.dart';
 import 'package:webrtc_client/screens/callee.dart';
 import 'package:webrtc_client/screens/chat.dart';
@@ -19,7 +18,10 @@ import 'package:webrtc_client/screens/me.dart';
 import 'package:webrtc_client/screens/signup.dart';
 import 'package:webrtc_client/screens/video.dart';
 import 'package:webrtc_client/utils.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import './components/video_view.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 class Config {
   static get backendDomain {
@@ -28,38 +30,34 @@ class Config {
 }
 
 class WS {
+  static WebSocketChannel? _ws;
   static StreamController? _ctrl;
-  static Sink? _sink;
-  static Stream? _stream;
 
   static setWS(String authToken) {
-    _sink?.close();
-    final ws = WebSocketChannel.connect(
+    _ws = WebSocketChannel.connect(
         Uri.parse("ws://${Config.backendDomain}/ws?auth_token=$authToken"));
-    _ctrl = StreamController.broadcast();
-    _ctrl!.addStream(ws.stream);
-    _sink = ws.sink;
-    _stream = _ctrl!.stream;
+    _ctrl = _ctrl ?? StreamController.broadcast();
+    _ws!.stream.listen((event) {
+      _ctrl!.add(event);
+    });
   }
 
   static Stream getOrCreateStream(String authToken) {
-    if (_stream == null) {
+    if (_ctrl == null) {
       setWS(authToken);
     }
-    return _stream!;
+    return _ctrl!.stream;
   }
 
   static Sink getOrCreateSink(String authToken) {
-    if (_sink == null) {
+    if (_ws == null) {
       setWS(authToken);
     }
-    return _sink!;
+    return _ws!.sink;
   }
 
   static close() {
-    _sink?.close();
-    _sink = null;
-    _ctrl?.close();
+    _ws!.sink.close();
   }
 }
 
@@ -72,6 +70,17 @@ class AuthToken {
 
 void main() async {
   await dotenv.load(fileName: ".env");
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  final notificationSettings =
+      FirebaseMessaging.instance.requestPermission(provisional: true);
+  if (kIsWeb) {
+    final fcmToken = await FirebaseMessaging.instance
+        .getToken(vapidKey: "BKagOny0KF_2pCJQ3m....moL0ewzQ8rZu");
+  }
+  final apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+
   runApp(MyApp());
 }
 
