@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:webrtc_client/apis/login.dart';
 import 'package:go_router/go_router.dart';
+import 'package:webrtc_client/apis/me.dart';
 import 'package:webrtc_client/blocs/ws.dart';
 import 'package:webrtc_client/main.dart';
 import 'package:webrtc_client/utils.dart';
@@ -55,8 +57,12 @@ class LoginScreen extends StatelessWidget {
                       .then((token) {
                     putAuthToken(token).then(
                       (_) {
-                        WS.setWS(token);
-                        context.go("/");
+                        getFCMToken().then((fcmToken) {
+                          updateFCMToken(token, fcmToken).then((_) {
+                            WS.setWS(token);
+                            context.go("/");
+                          });
+                        });
                       },
                     );
                   },

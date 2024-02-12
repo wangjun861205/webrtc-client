@@ -14,3 +14,13 @@ Future<void> upsertAvatar(
     throw Exception("failed to upsert avatar: ${resp.body}");
   }
 }
+
+Future<void> updateFCMToken(String authToken, fcmToken) async {
+  final resp = await put(
+      Uri.parse("http://${Config.backendDomain}/apis/v1/me/notification_token"),
+      headers: {"X-Auth-Token": authToken, "Content-Type": "application/json"},
+      body: jsonEncode({"token": fcmToken}));
+  if (resp.statusCode != 200) {
+    throw Exception("failed to update FCM token: ${resp.body}");
+  }
+}

@@ -4,10 +4,12 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:sdp_transform/sdp_transform.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:go_router/go_router.dart';
+import 'package:webrtc_client/apis/me.dart';
 import 'package:webrtc_client/screens/call.dart';
 import 'package:webrtc_client/screens/callee.dart';
 import 'package:webrtc_client/screens/chat.dart';
@@ -22,6 +24,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import './components/video_view.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+
+GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 class Config {
   static get backendDomain {
@@ -68,89 +72,120 @@ class AuthToken {
   static set token(t) => _token = t;
 }
 
-void main() async {
-  await dotenv.load(fileName: ".env");
+Future<void> _onBackgroundMessage(RemoteMessage message) async {
+  debugPrint(
+      "===================got notification===============: ${message.category}");
+  route.go("/");
+}
+
+initFCM() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  final notificationSettings =
-      FirebaseMessaging.instance.requestPermission(provisional: true);
-  if (kIsWeb) {
-    final fcmToken = await FirebaseMessaging.instance
-        .getToken(vapidKey: "BKagOny0KF_2pCJQ3m....moL0ewzQ8rZu");
+  FirebaseMessaging messaging = FirebaseMessaging.instance;
+  NotificationSettings settings = await messaging.requestPermission(
+    alert: true,
+    announcement: false,
+    badge: true,
+    carPlay: false,
+    criticalAlert: false,
+    provisional: false,
+    sound: true,
+  );
+  debugPrint('User granted permission: ${settings.authorizationStatus}');
+  final fcmToken = await FirebaseMessaging.instance
+      .getToken(vapidKey: kIsWeb ? dotenv.get("VAPID") : null);
+  if (fcmToken == null) {
+    throw Exception("cannot get FCM token");
   }
-  final apnsToken = await FirebaseMessaging.instance.getAPNSToken();
-
-  runApp(MyApp());
+  await putFCMToken(fcmToken);
+  final authToken = await getAuthToken();
+  if (authToken != null) {
+    await updateFCMToken(authToken, fcmToken);
+  }
+  FirebaseMessaging.onMessage.listen((event) {
+    debugPrint(
+        "===================got notification===============: ${event.messageId}");
+    route.go("/");
+  });
+  FirebaseMessaging.onBackgroundMessage(_onBackgroundMessage);
+  FirebaseMessaging.instance.onTokenRefresh.listen((event) {
+    if (AuthToken.token != null) {
+      updateFCMToken(AuthToken.token!, fcmToken);
+    }
+  });
 }
 
-class MyApp extends StatefulWidget {
-  late final GoRouter route;
+void main() async {
+  await dotenv.load(fileName: ".env");
+  await initFCM();
+  runApp(const MyApp());
+}
 
-  MyApp({super.key}) {
-    route = GoRouter(
-        routes: [
-          GoRoute(
-              path: "/",
-              builder: (context, state) =>
-                  HomeScreen(authToken: AuthToken.token)),
-          GoRoute(path: "/login", builder: (context, state) => LoginScreen()),
-          GoRoute(path: "/signup", builder: (context, state) => SignupScreen()),
-          GoRoute(
-              path: "/friends",
-              builder: (context, state) => FriendsScreen(
-                    authToken: AuthToken.token,
-                  )),
-          GoRoute(
-              path: "/chat",
-              builder: (context, state) {
-                return ChatScreen(
-                    authToken: AuthToken.token,
-                    to: state.uri.queryParameters["to"]!);
-              }),
-          GoRoute(
-              path: "/me",
-              builder: (context, state) {
-                return MeScreen(authToken: AuthToken.token);
-              }),
-          GoRoute(
-              path: "/call",
-              builder: (context, state) {
-                return CallScreen(
-                    authToken: AuthToken.token,
-                    rtc: (state.extra as Map<String, dynamic>)["rtc"]);
-              }),
-          GoRoute(
-              path: "/callee",
-              builder: (context, state) {
-                return CalleeScreen(
-                  authToken: AuthToken.token,
-                  rtc: (state.extra as Map<String, dynamic>)["rtc"],
-                );
-              }),
-          GoRoute(
-              path: "/video",
-              builder: (context, state) {
-                final extra = state.extra as Map<String, dynamic>;
-                return VideoScreen(
-                  authToken: AuthToken.token,
-                  rtc: extra["rtc"],
-                );
-              })
-        ],
-        redirect: (context, state) async {
-          if (state.matchedLocation == "/login" ||
-              state.matchedLocation == "/signup") {
-            return state.matchedLocation;
-          }
-          final authToken = await getAuthToken();
-          if (authToken == null) {
-            return "/login";
-          }
-          AuthToken.token = authToken;
-          return null;
-        });
-  }
+final route = GoRouter(
+    routes: [
+      GoRoute(
+          path: "/",
+          builder: (context, state) => HomeScreen(authToken: AuthToken.token)),
+      GoRoute(path: "/login", builder: (context, state) => LoginScreen()),
+      GoRoute(path: "/signup", builder: (context, state) => SignupScreen()),
+      GoRoute(
+          path: "/friends",
+          builder: (context, state) => FriendsScreen(
+                authToken: AuthToken.token,
+              )),
+      GoRoute(
+          path: "/chat",
+          builder: (context, state) {
+            return ChatScreen(
+                authToken: AuthToken.token,
+                to: state.uri.queryParameters["to"]!);
+          }),
+      GoRoute(
+          path: "/me",
+          builder: (context, state) {
+            return MeScreen(authToken: AuthToken.token);
+          }),
+      GoRoute(
+          path: "/call",
+          builder: (context, state) {
+            return CallScreen(
+                authToken: AuthToken.token,
+                rtc: (state.extra as Map<String, dynamic>)["rtc"]);
+          }),
+      GoRoute(
+          path: "/callee",
+          builder: (context, state) {
+            return CalleeScreen(
+              authToken: AuthToken.token,
+              rtc: (state.extra as Map<String, dynamic>)["rtc"],
+            );
+          }),
+      GoRoute(
+          path: "/video",
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>;
+            return VideoScreen(
+              authToken: AuthToken.token,
+              rtc: extra["rtc"],
+            );
+          })
+    ],
+    redirect: (context, state) async {
+      if (state.matchedLocation == "/login" ||
+          state.matchedLocation == "/signup") {
+        return state.matchedLocation;
+      }
+      final authToken = await getAuthToken();
+      if (authToken == null) {
+        return "/login";
+      }
+      AuthToken.token = authToken;
+      return null;
+    });
+
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
   @override
   State<StatefulWidget> createState() {
     return _MyApp();
@@ -188,7 +223,7 @@ class _MyApp extends State<MyApp> {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      routerConfig: widget.route,
+      routerConfig: route,
     );
   }
 }
