@@ -54,7 +54,16 @@ class _FriendsList extends State<FriendsList> {
         pagingController: _pageCtrl,
         builderDelegate: PagedChildBuilderDelegate<Friend>(
             itemBuilder: (context, item, index) => ListTile(
-                  title: Text(item.phone),
+                  title: item.unreadCount > 0
+                      ? Badge.count(
+                          count: item.unreadCount,
+                          alignment: Alignment.topLeft,
+                          backgroundColor: Colors.red,
+                          child: Padding(
+                              padding: const EdgeInsets.only(left: 30),
+                              child: Text(item.phone)),
+                        )
+                      : Text(item.phone),
                   trailing: SizedBox(
                     width: MediaQuery.of(context).size.width * 0.3,
                     child: Row(

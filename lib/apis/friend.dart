@@ -111,11 +111,16 @@ Future<void> rejectRequest(String id, authToken) async {
 class Friend {
   final String id;
   final String phone;
+  final int unreadCount;
 
-  const Friend({required this.id, required this.phone});
+  const Friend(
+      {required this.id, required this.phone, required this.unreadCount});
 
   factory Friend.fromJson(Map<String, dynamic> json) {
-    return Friend(id: json["id"], phone: json["phone"]);
+    return Friend(
+        id: json["id"],
+        phone: json["phone"],
+        unreadCount: json["unread_count"]);
   }
 }
 
@@ -131,6 +136,7 @@ Future<List<Friend>> myFriends(
     if (resp.statusCode != 200) {
       throw Exception(resp.body);
     }
+    debugPrint(resp.body);
     return (jsonDecode(resp.body) as List<dynamic>)
         .map((v) => Friend.fromJson(v))
         .toList();
