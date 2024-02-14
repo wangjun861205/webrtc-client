@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:webrtc_client/apis/chat_message.dart';
+import 'package:webrtc_client/blocs/chat.dart';
 import 'package:webrtc_client/main.dart';
 
 class ChatSessionView extends StatefulWidget {
@@ -18,30 +20,21 @@ class ChatSessionView extends StatefulWidget {
 }
 
 class _ChatSessionView extends State<ChatSessionView> {
-  late Future<void> future;
   StreamSubscription? sub;
-  List<ChatMessage> messages = [];
-
-  Future<void> _fetchMessages() async {
-    final msgs =
-        await fetchRecentlyMessages(authToken: widget.authToken, to: widget.to);
-    setState(() {
-      messages.addAll(msgs);
-    });
-  }
 
   @override
   void initState() {
-    future = _fetchMessages();
+    final msgs = BlocProvider.of<ChatMessagesCubit>(context);
+    msgs.loadMessages();
     final stream = WS.getOrCreateStream(widget.authToken);
-    stream.listen((event) {
+    sub = stream.listen((event) {
       final msg = jsonDecode(event);
       if (msg["typ"] == "ChatMessage") {
-        setState(() => messages.add(ChatMessage(
-              from: msg["data"]["from"],
-              content: msg["data"]["content"],
-              isOut: false,
-            )));
+        setState(() => msgs.pushMessage(ChatMessage(
+            id: msg["id"],
+            from: msg["data"]["from"],
+            content: msg["data"]["content"],
+            sentAt: msg["data"]["sent_at"])));
       }
     }, onDone: () => setState(() => sub = null));
     super.initState();
@@ -67,44 +60,38 @@ class _ChatSessionView extends State<ChatSessionView> {
           "http://${Config.backendDomain}/apis/v1/users/${widget.to}/avatar",
           headers: {"X-Auth-Token": widget.authToken}),
     );
-    return FutureBuilder(
-        future: future,
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(
-                child: Column(
-              children: [
-                Text(snapshot.error.toString()),
-                ElevatedButton(
-                    onPressed: () => setState(() => future = _fetchMessages()),
-                    child: const Text("Retry"))
-              ],
-            ));
-          }
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          return SizedBox(
-              height: MediaQuery.of(context).size.height * 0.7,
-              child: ListView.builder(
-                  itemCount: messages.length,
-                  itemBuilder: (context, i) {
-                    return messages[i].isOut
-                        ? SizedBox(
-                            child: Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                selfAvatar,
-                                Text(messages[i].content)
-                              ]))
-                        : SizedBox(
-                            child: Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                Text(messages[i].content),
-                                peerAvatar,
-                              ]));
-                  }));
-        });
+    final msgs = BlocProvider.of<ChatMessagesCubit>(context, listen: true);
+    if (msgs.state.error != null) {
+      return Center(
+          child: Column(children: [
+        Text(msgs.state.error.toString()),
+        ElevatedButton(
+            onPressed: () => msgs.loadMessages(), child: const Text("Retry"))
+      ]));
+    }
+    if (msgs.state.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    return SizedBox(
+        height: MediaQuery.of(context).size.height * 0.7,
+        child: ListView.builder(
+            itemCount: msgs.state.messages.length,
+            itemBuilder: (context, i) {
+              return msgs.state.messages[i].from == ""
+                  ? SizedBox(
+                      child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                          selfAvatar,
+                          Text(msgs.state.messages[i].content)
+                        ]))
+                  : SizedBox(
+                      child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                          Text(msgs.state.messages[i].content),
+                          peerAvatar,
+                        ]));
+            }));
   }
 }
