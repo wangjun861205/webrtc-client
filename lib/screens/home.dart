@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:webrtc_client/components/friends_list.dart';
 import 'package:webrtc_client/components/friends_screen_button.dart';
 import 'package:webrtc_client/components/me_nav_button.dart';
-import 'package:webrtc_client/main.dart';
 import 'package:webrtc_client/webrtc.dart';
 import 'package:go_router/go_router.dart';
 

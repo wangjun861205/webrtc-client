@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
@@ -10,6 +11,7 @@ import 'package:sdp_transform/sdp_transform.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:go_router/go_router.dart';
 import 'package:webrtc_client/apis/me.dart';
+import 'package:webrtc_client/blocs/chat.dart';
 import 'package:webrtc_client/screens/call.dart';
 import 'package:webrtc_client/screens/callee.dart';
 import 'package:webrtc_client/screens/chat.dart';
@@ -73,8 +75,6 @@ class AuthToken {
 }
 
 Future<void> _onBackgroundMessage(RemoteMessage message) async {
-  debugPrint(
-      "===================got notification===============: ${message.category}");
   route.go("/");
 }
 
@@ -104,8 +104,6 @@ initFCM() async {
     await updateFCMToken(authToken, fcmToken);
   }
   FirebaseMessaging.onMessage.listen((event) {
-    debugPrint(
-        "===================got notification===============: ${event.messageId}");
     route.go("/");
   });
   FirebaseMessaging.onBackgroundMessage(_onBackgroundMessage);

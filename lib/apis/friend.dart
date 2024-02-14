@@ -108,42 +108,42 @@ Future<void> rejectRequest(String id, authToken) async {
   }
 }
 
-class Friend {
-  final String id;
-  final String phone;
-  final int unreadCount;
+// class Friend {
+//   final String id;
+//   final String phone;
+//   final int unreadCount;
 
-  const Friend(
-      {required this.id, required this.phone, required this.unreadCount});
+//   const Friend(
+//       {required this.id, required this.phone, required this.unreadCount});
 
-  factory Friend.fromJson(Map<String, dynamic> json) {
-    return Friend(
-        id: json["id"],
-        phone: json["phone"],
-        unreadCount: json["unread_count"]);
-  }
-}
+//   factory Friend.fromJson(Map<String, dynamic> json) {
+//     return Friend(
+//         id: json["id"],
+//         phone: json["phone"],
+//         unreadCount: json["unread_count"]);
+//   }
+// }
 
-Future<List<Friend>> myFriends(
-    {required String authToken,
-    required int limit,
-    required int offset}) async {
-  try {
-    final resp = await get(
-        Uri.parse(
-            "http://${Config.backendDomain}/apis/v1/friends?limit=$limit&offset=$offset"),
-        headers: {"X-Auth-Token": authToken});
-    if (resp.statusCode != 200) {
-      throw Exception(resp.body);
-    }
-    debugPrint(resp.body);
-    return (jsonDecode(resp.body) as List<dynamic>)
-        .map((v) => Friend.fromJson(v))
-        .toList();
-  } catch (e) {
-    throw Exception("failed to get my friends: ${e.toString()}");
-  }
-}
+// Future<List<Friend>> myFriends(
+//     {required String authToken,
+//     required int limit,
+//     required int offset}) async {
+//   try {
+//     final resp = await get(
+//         Uri.parse(
+//             "http://${Config.backendDomain}/apis/v1/friends?limit=$limit&offset=$offset"),
+//         headers: {"X-Auth-Token": authToken});
+//     if (resp.statusCode != 200) {
+//       throw Exception(resp.body);
+//     }
+//     debugPrint(resp.body);
+//     return (jsonDecode(resp.body) as List<dynamic>)
+//         .map((v) => Friend.fromJson(v))
+//         .toList();
+//   } catch (e) {
+//     throw Exception("failed to get my friends: ${e.toString()}");
+//   }
+// }
 
 Future<int> numOfFriendRequests(String authToken) async {
   final resp = await get(
