@@ -47,14 +47,14 @@ class WS {
   }
 
   static Stream getOrCreateStream(String authToken) {
-    if (_ctrl == null) {
+    if (_ctrl == null || _ws?.closeCode != null) {
       setWS(authToken);
     }
     return _ctrl!.stream;
   }
 
   static Sink getOrCreateSink(String authToken) {
-    if (_ws == null) {
+    if (_ws == null || _ws?.closeCode != null) {
       setWS(authToken);
     }
     return _ws!.sink;
