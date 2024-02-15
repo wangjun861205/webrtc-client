@@ -16,7 +16,7 @@ class SessionItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final session = BlocProvider.of<SessionCubit>(context);
+    final session = BlocProvider.of<SessionCubit>(context, listen: true);
     return ListTile(
       title: session.state.unreadCount > 0
           ? Badge.count(
