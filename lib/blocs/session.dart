@@ -1,56 +1,31 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:webrtc_client/apis/session.dart';
-import 'package:webrtc_client/utils.dart';
+import 'package:webrtc_client/main.dart';
 
-class SessionsState {
-  final List<Session> sessions;
-  final int limit;
-  final int offset;
-  final bool isLoading;
-  final Object? error;
+class SessionCubit extends Cubit<Session> {
+  final String authToken;
+  late StreamSubscription wsSub;
+  SessionCubit({required this.authToken, required Session session})
+      : super(session) {
+    wsSub = WS.getOrCreateStream(AuthToken.token).listen((event) {
+      final json = jsonDecode(event);
+      if (json["typ"] != "ChatMessage" ||
+          json["data"]["from"] != state.peerID) {
+        return;
+      }
+      emit(Session(
+          peerID: state.peerID,
+          peerPhone: state.peerPhone,
+          unreadCount: state.unreadCount + 1));
+    });
+  }
 
-  const SessionsState(
-      {required this.sessions,
-      required this.limit,
-      required this.offset,
-      required this.isLoading,
-      required this.error});
-}
-
-class SessionsCubit extends Cubit<SessionsState> {
-  SessionsCubit({int limit = 20, int offset = 0})
-      : super(SessionsState(
-            sessions: [],
-            limit: limit,
-            offset: offset,
-            isLoading: false,
-            error: null));
-
-  void load() async {
-    emit(SessionsState(
-        sessions: state.sessions,
-        limit: state.limit,
-        offset: state.offset,
-        isLoading: true,
-        error: null));
-    try {
-      final sessions = await mySessions(
-          authToken: (await getAuthToken())!,
-          limit: state.limit,
-          offset: state.offset);
-      emit(SessionsState(
-          sessions: sessions,
-          limit: state.limit,
-          offset: state.limit + state.offset,
-          isLoading: false,
-          error: false));
-    } catch (err) {
-      emit(SessionsState(
-          sessions: state.sessions,
-          limit: state.limit,
-          offset: state.offset,
-          isLoading: false,
-          error: err));
-    }
+  @override
+  Future<void> close() {
+    wsSub.cancel();
+    return super.close();
   }
 }

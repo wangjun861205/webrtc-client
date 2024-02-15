@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:webrtc_client/main.dart';
 
@@ -27,11 +28,12 @@ Future<List<Session>> mySessions(
     required int offset}) async {
   final resp = await get(
       Uri.parse(
-          "http://${Config.backendDomain}/sessions?limit=$limit&offset=$offset"),
+          "http://${Config.backendDomain}/apis/v1/me/sessions?limit=$limit&offset=$offset"),
       headers: {"X-Auth-Token": authToken});
   if (resp.statusCode != 200) {
     throw Exception("failed to fetch my sessions: ${resp.body}");
   }
+  debugPrint(resp.body);
   return (jsonDecode(resp.body) as List<dynamic>)
       .map((s) => Session.fromJson(s))
       .toList();
