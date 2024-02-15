@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:webrtc_client/components/friends_list.dart';
+import 'package:webrtc_client/components/session_list.dart';
 import 'package:webrtc_client/components/friends_screen_button.dart';
 import 'package:webrtc_client/components/me_nav_button.dart';
 import 'package:webrtc_client/webrtc.dart';
@@ -60,7 +60,7 @@ class _HomeScreen extends State<HomeScreen> {
         body: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
           SizedBox(
             height: 300,
-            child: FriendsList(
+            child: SessionList(
               limit: 20,
               authToken: widget.authToken,
               onCall: (String id) {

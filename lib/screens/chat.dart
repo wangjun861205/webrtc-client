@@ -21,9 +21,8 @@ class _ChatScreen extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-        create: (_) => ChatMessagesCubit(
-            authToken: widget.authToken, peerID: widget.to, limit: 20)
-          ..loadMessages(),
+        create: (_) =>
+            ChatMessagesCubit(authToken: widget.authToken, peerID: widget.to),
         child: Scaffold(
           appBar: AppBar(
             leading: IconButton(

@@ -19,7 +19,8 @@ class SessionCubit extends Cubit<Session> {
       emit(Session(
           peerID: state.peerID,
           peerPhone: state.peerPhone,
-          unreadCount: state.unreadCount + 1));
+          unreadCount: state.unreadCount + 1,
+          latestContent: json["data"]["content"]));
     });
   }
 

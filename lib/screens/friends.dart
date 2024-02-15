@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:webrtc_client/apis/friend.dart';
+import 'package:webrtc_client/blocs/friend.dart';
 import 'package:webrtc_client/components/friend_request_list.dart';
+import 'package:webrtc_client/components/friends_list.dart';
 import 'package:webrtc_client/components/user_list.dart';
 
 class FriendsScreen extends StatefulWidget {
@@ -20,24 +23,30 @@ class _FriendsScreen extends State<FriendsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          title: const Text("Friends"),
-          centerTitle: true,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_circle_left_outlined),
-            onPressed: () => context.go("/"),
-          ),
-        ),
-        body: Column(
-          children: [
-            FriendRequestList(
-              authToken: widget.authToken,
+    return BlocProvider(
+      create: (_) => FriendsCubit(authToken: widget.authToken)..load(),
+      child: Scaffold(
+          appBar: AppBar(
+            title: const Text("Friends"),
+            centerTitle: true,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_circle_left_outlined),
+              onPressed: () => context.go("/"),
             ),
-            UserList(
-              authToken: widget.authToken,
-            )
-          ],
-        ));
+          ),
+          body: Column(
+            children: [
+              FriendRequestList(
+                authToken: widget.authToken,
+              ),
+              UserList(
+                authToken: widget.authToken,
+              ),
+              Flexible(
+                child: FriendsList(authToken: widget.authToken),
+              )
+            ],
+          )),
+    );
   }
 }

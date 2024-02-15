@@ -8,17 +8,20 @@ class Session {
   final String peerID;
   final String peerPhone;
   final int unreadCount;
+  final String latestContent;
 
   const Session(
       {required this.peerID,
       required this.peerPhone,
-      required this.unreadCount});
+      required this.unreadCount,
+      required this.latestContent});
 
   factory Session.fromJson(Map<String, dynamic> json) {
     return Session(
         peerID: json["peer_id"],
         peerPhone: json["peer_phone"],
-        unreadCount: json["unread_count"]);
+        unreadCount: json["unread_count"],
+        latestContent: json["latest_content"]);
   }
 }
 
@@ -33,7 +36,6 @@ Future<List<Session>> mySessions(
   if (resp.statusCode != 200) {
     throw Exception("failed to fetch my sessions: ${resp.body}");
   }
-  debugPrint(resp.body);
   return (jsonDecode(resp.body) as List<dynamic>)
       .map((s) => Session.fromJson(s))
       .toList();

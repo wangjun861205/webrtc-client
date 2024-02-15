@@ -36,7 +36,6 @@ class _ChatInputGroup extends State<ChatInputGroup> {
         Flexible(
           flex: 7,
           child: TextField(
-            enabled: !(msgs.state.isLoading || msgs.state.error != null),
             controller: textCtrl,
             textInputAction: TextInputAction.send,
           ),
