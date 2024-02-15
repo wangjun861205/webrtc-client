@@ -22,7 +22,8 @@ class _ChatScreen extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return BlocProvider(
         create: (_) =>
-            ChatMessagesCubit(authToken: widget.authToken, peerID: widget.to),
+            ChatMessagesCubit(authToken: widget.authToken, peerID: widget.to)
+              ..next(),
         child: Scaffold(
           appBar: AppBar(
             leading: IconButton(

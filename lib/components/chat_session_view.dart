@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -21,28 +20,21 @@ class ChatSessionView extends StatefulWidget {
 }
 
 class _ChatSessionView extends State<ChatSessionView> {
-  StreamSubscription? sub;
-  final PagingController _pageCtrl =
-      PagingController<String?, ChatMessage>(firstPageKey: null);
+  // final PagingController _pageCtrl =
+  //     PagingController<String?, ChatMessage>(firstPageKey: null);
 
-  @override
-  void initState() {
-    _pageCtrl.addPageRequestListener((pageKey) async {
-      final messages = await chatMessageHistory(
-          authToken: widget.authToken, to: widget.to, limit: 20);
-      if (messages.isEmpty) {
-        return;
-      }
-      _pageCtrl.appendPage(messages, messages.first.id);
-    });
-    super.initState();
-  }
-
-  @override
-  void deactivate() {
-    sub?.cancel();
-    super.deactivate();
-  }
+  // @override
+  // void initState() {
+  //   _pageCtrl.addPageRequestListener((pageKey) async {
+  //     final messages = await chatMessageHistory(
+  //         authToken: widget.authToken, to: widget.to, limit: 20);
+  //     if (messages.isEmpty) {
+  //       return;
+  //     }
+  //     _pageCtrl.appendPage(messages, messages.first.id);
+  //   });
+  //   super.initState();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -59,21 +51,37 @@ class _ChatSessionView extends State<ChatSessionView> {
           headers: {"X-Auth-Token": widget.authToken}),
     );
     final msgs = BlocProvider.of<ChatMessagesCubit>(context, listen: true);
+    if (msgs.state.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (msgs.state.error != null) {
+      return Center(
+          child: Column(
+        children: [
+          Text(msgs.state.error!.toString()),
+          ElevatedButton(
+              onPressed: () => msgs.next(), child: const Text("Retry"))
+        ],
+      ));
+    }
     return SizedBox(
         height: MediaQuery.of(context).size.height * 0.7,
         child: ListView.builder(
-            itemCount: msgs.state.length,
+            itemCount: msgs.state.result.length,
             itemBuilder: (context, i) {
-              return msgs.state[i].from == ""
+              return msgs.state.result[i].from == ""
                   ? SizedBox(
                       child: Row(
                           mainAxisAlignment: MainAxisAlignment.start,
-                          children: [selfAvatar, Text(msgs.state[i].content)]))
+                          children: [
+                          selfAvatar,
+                          Text(msgs.state.result[i].content)
+                        ]))
                   : SizedBox(
                       child: Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                          Text(msgs.state[i].content),
+                          Text(msgs.state.result[i].content),
                           peerAvatar,
                         ]));
             }));
