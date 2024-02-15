@@ -22,7 +22,7 @@ class ChatSessionView extends StatefulWidget {
 
 class _ChatSessionView extends State<ChatSessionView> {
   StreamSubscription? sub;
-  PagingController _pageCtrl =
+  final PagingController _pageCtrl =
       PagingController<String?, ChatMessage>(firstPageKey: null);
 
   @override
