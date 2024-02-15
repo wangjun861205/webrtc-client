@@ -20,26 +20,32 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreen extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
-        title: const Text("Chat"),
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          Flexible(
-            flex: 8,
-            child: ChatSessionView(authToken: widget.authToken, to: widget.to),
+    return BlocProvider(
+        create: (_) => ChatMessagesCubit(
+            authToken: widget.authToken, peerID: widget.to, limit: 20)
+          ..loadMessages(),
+        child: Scaffold(
+          appBar: AppBar(
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => context.go("/"),
+            ),
+            title: const Text("Chat"),
+            centerTitle: true,
           ),
-          Flexible(
-              flex: 2,
-              child: ChatInputGroup(authToken: widget.authToken, to: widget.to))
-        ],
-      ),
-    );
+          body: Column(
+            children: [
+              Flexible(
+                flex: 8,
+                child:
+                    ChatSessionView(authToken: widget.authToken, to: widget.to),
+              ),
+              Flexible(
+                  flex: 2,
+                  child: ChatInputGroup(
+                      authToken: widget.authToken, to: widget.to))
+            ],
+          ),
+        ));
   }
 }

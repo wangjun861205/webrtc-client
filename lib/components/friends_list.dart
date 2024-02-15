@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:webrtc_client/apis/session.dart';
 import 'package:webrtc_client/blocs/chat.dart';
@@ -35,13 +36,7 @@ class SessionItem extends StatelessWidget {
         ]),
       ),
       onTap: () {
-        final msgs = BlocProvider.of<ChatMessagesCubit>(context);
-        Navigator.of(context).push(MaterialPageRoute(
-            builder: (context) => BlocProvider.value(
-                value: msgs,
-                child: ChatScreen(
-                    authToken: authToken, to: session.state.peerID))));
-        // context.go("/chat?to=${item.id}");
+        context.go("/chat?to=${session.state.peerID}");
       },
     );
   }
