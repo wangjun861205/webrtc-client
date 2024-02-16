@@ -58,7 +58,10 @@ class _HomeScreen extends State<HomeScreen> {
                 ),
                 TextButton(
                     onPressed: () => context.go("/login"),
-                    child: const Text("Login"))
+                    child: const Text("Login")),
+                IconButton(
+                    onPressed: () => context.go("/search_friends"),
+                    icon: const Icon(Icons.add)),
               ],
             ),
             body: Column(

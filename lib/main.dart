@@ -19,6 +19,7 @@ import 'package:webrtc_client/screens/friends.dart';
 import 'package:webrtc_client/screens/home.dart';
 import 'package:webrtc_client/screens/login.dart';
 import 'package:webrtc_client/screens/me.dart';
+import 'package:webrtc_client/screens/search_friend.dart';
 import 'package:webrtc_client/screens/signup.dart';
 import 'package:webrtc_client/screens/video.dart';
 import 'package:webrtc_client/utils.dart';
@@ -167,6 +168,11 @@ final route = GoRouter(
               authToken: AuthToken.token,
               rtc: extra["rtc"],
             );
+          }),
+      GoRoute(
+          path: "/search_friends",
+          builder: (context, state) {
+            return SearchFriendScreen(authToken: AuthToken.token);
           })
     ],
     redirect: (context, state) async {

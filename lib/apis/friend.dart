@@ -16,8 +16,13 @@ class User {
   String id;
   String phone;
   UserType typ;
+  String? avatar;
 
-  User({required this.id, required this.phone, required this.typ});
+  User(
+      {required this.id,
+      required this.phone,
+      required this.typ,
+      required this.avatar});
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
@@ -36,7 +41,8 @@ class User {
             default:
               return UserType.stranger;
           }
-        }());
+        }(),
+        avatar: json["avatar"]);
   }
 }
 
@@ -48,7 +54,6 @@ Future<User?> searchUser(
   if (resp.statusCode != 200) {
     throw Exception("failed to get all users: ${resp.body}");
   }
-  debugPrint(resp.body);
   final json = jsonDecode(resp.body);
   return json != null ? User.fromJson(json) : null;
 }
@@ -56,12 +61,13 @@ Future<User?> searchUser(
 class FriendRequest {
   String id;
   String from;
-  String to;
+  String phone;
 
-  FriendRequest({required this.id, required this.from, required this.to});
+  FriendRequest({required this.id, required this.from, required this.phone});
 
   factory FriendRequest.fromJson(Map<String, dynamic> json) {
-    return FriendRequest(id: json["id"], from: json["from"], to: json["to"]);
+    return FriendRequest(
+        id: json["id"], from: json["from"], phone: json["phone"]);
   }
 }
 

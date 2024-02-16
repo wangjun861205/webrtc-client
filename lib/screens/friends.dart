@@ -23,8 +23,12 @@ class _FriendsScreen extends State<FriendsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => FriendsCubit(authToken: widget.authToken)..load(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+            create: (_) => FriendsCubit(authToken: widget.authToken)..load()),
+        BlocProvider(create: (_) => FriendRequestsCubit()..next()),
+      ],
       child: Scaffold(
           appBar: AppBar(
             title: const Text("Friends"),
@@ -36,12 +40,10 @@ class _FriendsScreen extends State<FriendsScreen> {
           ),
           body: Column(
             children: [
-              FriendRequestList(
-                authToken: widget.authToken,
-              ),
-              UserList(
-                authToken: widget.authToken,
-              ),
+              const Flexible(child: FriendRequestList()),
+              // UserList(
+              //   authToken: widget.authToken,
+              // ),
               Flexible(
                 child: FriendsList(authToken: widget.authToken),
               )

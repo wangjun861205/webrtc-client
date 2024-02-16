@@ -4,107 +4,80 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:webrtc_client/apis/friend.dart';
+import 'package:webrtc_client/blocs/friend.dart';
 import 'package:webrtc_client/blocs/ws.dart';
 import 'package:go_router/go_router.dart';
 import 'package:webrtc_client/main.dart';
 
-class FriendRequestList extends StatefulWidget {
-  final String authToken;
+class AcceptButton extends StatelessWidget {
+  final String id;
 
-  const FriendRequestList({required this.authToken, super.key});
-
-  @override
-  State<StatefulWidget> createState() {
-    return _FriendRequestList();
-  }
-}
-
-class _FriendRequestList extends State<FriendRequestList> {
-  late Future<List<FriendRequest>> future;
-  late StreamSubscription? sub;
-
-  @override
-  void initState() {
-    super.initState();
-    future = myRequests(widget.authToken);
-  }
-
-  @override
-  void deactivate() async {
-    super.deactivate();
-    if (sub != null) {
-      await sub!.cancel();
-    }
-  }
+  const AcceptButton({required this.id, super.key});
 
   @override
   Widget build(BuildContext context) {
-    sub = WS.getOrCreateStream(widget.authToken).listen((event) {
-      final map = jsonDecode(event);
-      if (map["typ"] == "AddFriend") {
-        setState(() {
-          future = myRequests(widget.authToken);
-        });
-      }
-    });
-    return FutureBuilder(
-        future: future,
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Column(children: [
-              Text(snapshot.error.toString()),
-              ElevatedButton(
-                  onPressed: () {
-                    future = myRequests(widget.authToken);
-                    setState(() {});
-                  },
-                  child: const Text("Refresh"))
-            ]);
-          }
-          if (!snapshot.hasData) {
-            return const CircularProgressIndicator();
-          }
+    final reqs = BlocProvider.of<FriendRequestsCubit>(context, listen: true);
+    return TextButton(
+        onPressed: () {
+          acceptRequest(id, AuthToken.token).then((_) {
+            reqs.setResult(reqs.state.result..removeWhere((r) => r.id == id));
+          }, onError: (e) {
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(e.toString())));
+          });
+        },
+        child: const Text("Accept"));
+  }
+}
 
-          return SizedBox(
-              height: 400,
-              child: ListView.builder(
-                  itemCount: snapshot.data!.length,
-                  itemBuilder: (context, i) => ListTile(
-                      title: Text(snapshot.data![i].from),
-                      trailing: SizedBox(
-                          width: 300,
-                          child: Row(children: [
-                            TextButton(
-                                onPressed: () {
-                                  acceptRequest(snapshot.data![i].id,
-                                          widget.authToken)
-                                      .then((_) => setState(() {
-                                            future =
-                                                myRequests(widget.authToken);
-                                          }))
-                                      .onError((error, stackTrace) =>
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(SnackBar(
-                                                  content:
-                                                      Text(error.toString()))));
-                                },
-                                child: const Text("Accept")),
-                            TextButton(
-                              onPressed: () {
-                                rejectRequest(
-                                        snapshot.data![i].id, widget.authToken)
-                                    .then((_) => setState(() {
-                                          future = myRequests(widget.authToken);
-                                        }))
-                                    .onError((error, stackTrace) =>
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(SnackBar(
-                                                content:
-                                                    Text(error.toString()))));
-                              },
-                              child: const Text("Reject"),
-                            )
-                          ])))));
-        });
+class RejectButton extends StatelessWidget {
+  final String id;
+
+  const RejectButton({required this.id, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final reqs = BlocProvider.of<FriendRequestsCubit>(context, listen: true);
+    return TextButton(
+        onPressed: () {
+          rejectRequest(id, AuthToken.token).then((_) {
+            reqs.setResult(reqs.state.result..removeWhere((r) => r.id == id));
+          }, onError: (e) {
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(e.toString())));
+          });
+        },
+        child: const Text("Reject"));
+  }
+}
+
+class FriendRequestList extends StatelessWidget {
+  const FriendRequestList({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final reqs = BlocProvider.of<FriendRequestsCubit>(context, listen: true);
+    if (reqs.state.error != null) {
+      return Center(
+          child: Column(children: [
+        Text(reqs.state.error.toString()),
+        ElevatedButton(
+            onPressed: () => reqs.next(), child: const Text("Refresh"))
+      ]));
+    }
+    if (reqs.state.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return ListView.builder(
+        itemCount: reqs.state.result.length,
+        itemBuilder: (context, i) => ListTile(
+            title: Text(reqs.state.result[i].phone),
+            trailing: SizedBox(
+                width: 300,
+                child: Row(children: [
+                  AcceptButton(id: reqs.state.result[i].id),
+                  RejectButton(id: reqs.state.result[i].id),
+                ]))));
   }
 }
