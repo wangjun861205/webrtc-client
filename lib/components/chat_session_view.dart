@@ -1,17 +1,20 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:webrtc_client/apis/chat_message.dart';
 import 'package:webrtc_client/blocs/chat.dart';
+import 'package:webrtc_client/blocs/common.dart';
 import 'package:webrtc_client/main.dart';
 
 class ChatSessionView extends StatefulWidget {
   final String authToken;
   final String to;
+  final ScrollController scrollCtrl;
 
-  const ChatSessionView({required this.authToken, required this.to, super.key});
+  const ChatSessionView(
+      {required this.authToken,
+      required this.to,
+      required this.scrollCtrl,
+      super.key});
 
   @override
   State<StatefulWidget> createState() {
@@ -20,22 +23,6 @@ class ChatSessionView extends StatefulWidget {
 }
 
 class _ChatSessionView extends State<ChatSessionView> {
-  // final PagingController _pageCtrl =
-  //     PagingController<String?, ChatMessage>(firstPageKey: null);
-
-  // @override
-  // void initState() {
-  //   _pageCtrl.addPageRequestListener((pageKey) async {
-  //     final messages = await chatMessageHistory(
-  //         authToken: widget.authToken, to: widget.to, limit: 20);
-  //     if (messages.isEmpty) {
-  //       return;
-  //     }
-  //     _pageCtrl.appendPage(messages, messages.first.id);
-  //   });
-  //   super.initState();
-  // }
-
   @override
   Widget build(BuildContext context) {
     final selfAvatar = CircleAvatar(
@@ -65,8 +52,9 @@ class _ChatSessionView extends State<ChatSessionView> {
       ));
     }
     return SizedBox(
-        height: MediaQuery.of(context).size.height * 0.7,
+        height: MediaQuery.of(context).size.height * 0.6,
         child: ListView.builder(
+            controller: widget.scrollCtrl,
             itemCount: msgs.state.result.length,
             itemBuilder: (context, i) {
               return msgs.state.result[i].from == ""

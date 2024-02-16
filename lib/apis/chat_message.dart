@@ -30,9 +30,10 @@ Future<List<ChatMessage>> chatMessageHistory(
     required int limit,
     String? before}) async {
   final resp = await get(
-      Uri.parse(
-          "http://${Config.backendDomain}/apis/v1/chat_messages?to=$to&limit=$limit&before=$before"),
-      headers: {"X-Auth-Token": authToken});
+    Uri.parse(
+        "http://${Config.backendDomain}/apis/v1/chat_messages?to=$to&limit=$limit${before != null ? "&before=$before" : ""}"),
+    headers: {"X-Auth-Token": authToken},
+  );
   if (resp.statusCode != 200) {
     throw Exception("failed to fetch chat message history: ${resp.body}");
   }

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class Query<P, R> {
@@ -21,7 +22,7 @@ class Query<P, R> {
 }
 
 class QueryCubit<P, R> extends Cubit<Query<P, R>> {
-  QueryCubit(Query<P, R> query) : super(query);
+  QueryCubit({required Query<P, R> query}) : super(query);
 
   void next() async {
     emit(Query(
@@ -44,6 +45,8 @@ class QueryCubit<P, R> extends Cubit<Query<P, R>> {
         fetchFunc: state.fetchFunc,
         handleResultFunc: state.handleResultFunc,
         nextParamsFunc: state.nextParamsFunc,
+        isLoading: false,
+        error: null,
       ));
     } catch (e) {
       emit(Query(

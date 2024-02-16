@@ -7,10 +7,10 @@ import 'package:webrtc_client/main.dart';
 class Session {
   final String peerID;
   final String peerPhone;
-  final int unreadCount;
-  final String latestContent;
+  int unreadCount;
+  String latestContent;
 
-  const Session(
+  Session(
       {required this.peerID,
       required this.peerPhone,
       required this.unreadCount,
@@ -25,13 +25,11 @@ class Session {
   }
 }
 
-Future<List<Session>> mySessions(
-    {required String authToken,
-    required int limit,
-    required int offset}) async {
+Future<List<Session>> mySessions({
+  required String authToken,
+}) async {
   final resp = await get(
-      Uri.parse(
-          "http://${Config.backendDomain}/apis/v1/me/sessions?limit=$limit&offset=$offset"),
+      Uri.parse("http://${Config.backendDomain}/apis/v1/me/sessions"),
       headers: {"X-Auth-Token": authToken});
   if (resp.statusCode != 200) {
     throw Exception("failed to fetch my sessions: ${resp.body}");

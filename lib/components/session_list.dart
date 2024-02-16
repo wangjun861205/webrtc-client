@@ -1,41 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:webrtc_client/apis/session.dart';
 import 'package:webrtc_client/blocs/session.dart';
 import 'package:webrtc_client/components/call_nav_button.dart';
 
 class SessionItem extends StatelessWidget {
-  final String authToken;
+  final Session session;
   final Function(String id) onCall;
 
-  const SessionItem({required this.authToken, required this.onCall, super.key});
+  const SessionItem({required this.session, required this.onCall, super.key});
 
   @override
   Widget build(BuildContext context) {
-    final session = BlocProvider.of<SessionCubit>(context, listen: true);
     return ListTile(
-      title: session.state.unreadCount > 0
+      title: session.unreadCount > 0
           ? Badge.count(
-              count: session.state.unreadCount,
+              count: session.unreadCount,
               alignment: Alignment.topLeft,
               backgroundColor: Colors.red,
               child: Padding(
                   padding: const EdgeInsets.only(left: 30),
-                  child: Text(session.state.peerPhone)),
+                  child: Text(session.peerPhone)),
             )
-          : Text(session.state.peerPhone),
-      subtitle: Text(session.state.latestContent),
+          : Text(session.peerPhone),
+      subtitle: Text(session.latestContent),
       trailing: SizedBox(
         width: MediaQuery.of(context).size.width * 0.3,
         child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
           const Icon(Icons.chevron_right),
-          CallNavButton(onPress: () => onCall(session.state.peerID)),
+          CallNavButton(onPress: () => onCall(session.peerID)),
         ]),
       ),
       onTap: () {
-        context.go("/chat?to=${session.state.peerID}");
+        context.go("/chat?to=${session.peerID}");
       },
     );
   }
@@ -59,44 +57,27 @@ class SessionList extends StatefulWidget {
 }
 
 class _SessionList extends State<SessionList> {
-  final PagingController<int, Session> _pageCtrl =
-      PagingController(firstPageKey: 0);
-
-  @override
-  void initState() {
-    _pageCtrl.addPageRequestListener((offset) {
-      _myFriends(offset);
-    });
-    super.initState();
-  }
-
-  Future<void> _myFriends(int offset) async {
-    try {
-      final sessions = await mySessions(
-          authToken: widget.authToken, limit: widget.limit, offset: offset);
-      if (sessions.length < widget.limit) {
-        _pageCtrl.appendLastPage(sessions);
-        return;
-      }
-      final nextPageKey = offset + sessions.length;
-      _pageCtrl.appendPage(sessions, nextPageKey);
-    } catch (error) {
-      _pageCtrl.error = error;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return PagedListView(
-      pagingController: _pageCtrl,
-      builderDelegate: PagedChildBuilderDelegate<Session>(
-          itemBuilder: (context, item, index) => BlocProvider(
-              create: (_) =>
-                  SessionCubit(authToken: widget.authToken, session: item),
-              child: SessionItem(
-                authToken: widget.authToken,
-                onCall: widget.onCall,
-              ))),
-    );
+    final sessions = BlocProvider.of<SessionsCubit>(context, listen: true);
+    if (sessions.state.error != null) {
+      return Center(
+          child: Column(
+        children: [
+          Text(sessions.state.error.toString()),
+          ElevatedButton(
+              onPressed: () => sessions.next(), child: const Text("Retry"))
+        ],
+      ));
+    }
+    if (sessions.state.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    return ListView.builder(
+        itemCount: sessions.state.result.length,
+        itemBuilder: (context, index) => SessionItem(
+              session: sessions.state.result[index],
+              onCall: widget.onCall,
+            ));
   }
 }

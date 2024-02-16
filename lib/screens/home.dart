@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:webrtc_client/blocs/session.dart';
 import 'package:webrtc_client/components/session_list.dart';
 import 'package:webrtc_client/components/friends_screen_button.dart';
 import 'package:webrtc_client/components/me_nav_button.dart';
@@ -43,34 +45,38 @@ class _HomeScreen extends State<HomeScreen> {
     if (rtc.status == RTCStatus.uninitated) {
       return const Center(child: CircularProgressIndicator());
     }
-    return Scaffold(
-        appBar: AppBar(
-          title: const Text("Home"),
-          centerTitle: true,
-          actions: [
-            const MeNavButton(),
-            FriendsScreenButton(
-              authToken: widget.authToken,
+    return BlocProvider(
+        create: (_) => SessionsCubit(authToken: widget.authToken)..next(),
+        child: Scaffold(
+            appBar: AppBar(
+              title: const Text("Home"),
+              centerTitle: true,
+              actions: [
+                const MeNavButton(),
+                FriendsScreenButton(
+                  authToken: widget.authToken,
+                ),
+                TextButton(
+                    onPressed: () => context.go("/login"),
+                    child: const Text("Login"))
+              ],
             ),
-            TextButton(
-                onPressed: () => context.go("/login"),
-                child: const Text("Login"))
-          ],
-        ),
-        body: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
-          SizedBox(
-            height: 300,
-            child: SessionList(
-              limit: 20,
-              authToken: widget.authToken,
-              onCall: (String id) {
-                rtc.peerID = id;
-                rtc.afterOffering =
-                    () => context.go("/call", extra: {"rtc": rtc});
-                rtc.offer();
-              },
-            ),
-          ),
-        ]));
+            body: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    height: 300,
+                    child: SessionList(
+                      limit: 20,
+                      authToken: widget.authToken,
+                      onCall: (String id) {
+                        rtc.peerID = id;
+                        rtc.afterOffering =
+                            () => context.go("/call", extra: {"rtc": rtc});
+                        rtc.offer();
+                      },
+                    ),
+                  ),
+                ])));
   }
 }
