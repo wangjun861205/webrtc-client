@@ -69,6 +69,10 @@ class FriendRequestList extends StatelessWidget {
       return const Center(child: CircularProgressIndicator());
     }
 
+    if (reqs.state.result.isEmpty) {
+      return const Center(child: Text("No friend request"));
+    }
+
     return ListView.builder(
         itemCount: reqs.state.result.length,
         itemBuilder: (context, i) => ListTile(

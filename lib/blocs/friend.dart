@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:webrtc_client/apis/friend.dart';
 import 'package:webrtc_client/blocs/common.dart';
@@ -101,8 +102,14 @@ class FriendRequestsCubit extends QueryCubit<void, List<FriendRequest>> {
         return;
       }
       final requests = state.result;
-      requests.add(FriendRequest.fromJson(json));
+      requests.add(FriendRequest.fromJson(json["data"]));
       setResult(requests);
     });
+  }
+
+  @override
+  Future<void> close() {
+    wsSub.cancel();
+    return super.close();
   }
 }
