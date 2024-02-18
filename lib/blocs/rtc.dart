@@ -54,6 +54,7 @@ class RTCCubit extends Cubit<RTC> {
                 to: peerID,
                 typ: "IceCandidate",
                 payload: jsonEncode({
+                  "typ": "IceCandidate",
                   "id": candidate.sdpMid,
                   "label": candidate.sdpMLineIndex,
                   "candidate": candidate.candidate
