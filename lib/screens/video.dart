@@ -24,6 +24,7 @@ class VideoScreen extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                   shape: const CircleBorder(), backgroundColor: Colors.red),
               onPressed: () {
+                rtc.cancel();
                 rtc.close();
                 context.go("/");
               },
