@@ -174,7 +174,7 @@ final route = GoRouter(
       GoRoute(
           path: "/callee",
           builder: (context, state) {
-            final extra = state.extra as Map<String, String>;
+            final extra = state.extra as Map<String, dynamic>;
             final peerID = extra["peerID"]!;
             final peerPhone = extra["peerPhone"]!;
             final sdp = extra["sdp"]!;

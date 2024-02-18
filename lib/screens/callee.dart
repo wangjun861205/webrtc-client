@@ -31,7 +31,7 @@ class CalleeScreen extends StatelessWidget {
       return Container();
     }
     if (rtc.state.status == RTCStatus.answered) {
-      return VideoScreen();
+      return const VideoScreen();
     }
     return Scaffold(
       backgroundColor: Colors.black,
