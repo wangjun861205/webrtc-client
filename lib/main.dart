@@ -53,7 +53,7 @@ class WS {
         if (payload["rtcType"] == "offer") {
           route.go("/callee", extra: {
             "peerID": json["from"],
-            "phone": json["phone"],
+            "peerPhone": json["phone"],
             "sdp": payload["sdp"],
             "rtcType": payload["rtcType"]
           });
