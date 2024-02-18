@@ -133,6 +133,7 @@ class RTCCubit extends Cubit<RTC> {
               to: peerID,
               typ: "Answer",
               payload: jsonEncode({
+                "typ": "Answer",
                 "sdp": answer.sdp,
                 "rtcType": answer.type,
               })));
@@ -146,7 +147,10 @@ class RTCCubit extends Cubit<RTC> {
     try {
       await sendRTCMessage(
           authToken: AuthToken.token,
-          msg: RTCMessage(to: peerID, typ: "Refuse", payload: ""));
+          msg: RTCMessage(
+              to: peerID,
+              typ: "Refuse",
+              payload: jsonEncode({"typ": "Refuse"})));
       emit(RTC(status: RTCStatus.refused));
     } catch (err) {
       emit(RTC(status: state.status, error: err));
@@ -157,7 +161,10 @@ class RTCCubit extends Cubit<RTC> {
     try {
       await sendRTCMessage(
           authToken: AuthToken.token,
-          msg: RTCMessage(to: peerID, typ: "Cancel", payload: ""));
+          msg: RTCMessage(
+              to: peerID,
+              typ: "Cancel",
+              payload: jsonEncode({"typ": "Cancel"})));
       emit(RTC(status: RTCStatus.canceled));
     } catch (err) {
       emit(RTC(status: state.status, error: err));
