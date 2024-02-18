@@ -9,7 +9,7 @@ class CalleeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final rtc = BlocProvider.of<RTCCubit>(context);
+    final rtc = BlocProvider.of<RTCCubit>(context, listen: true);
     if (rtc.state.error != null) {
       return Center(
           child: Column(
@@ -43,7 +43,7 @@ class CalleeScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
-                    rtc.peerID,
+                    rtc.peerPhone,
                     style: const TextStyle(color: Colors.white),
                   ),
                   Row(
