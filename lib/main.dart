@@ -50,7 +50,7 @@ class WS {
       final json = jsonDecode(event);
       if (json["typ"] == "RTC") {
         final payload = jsonDecode(json["payload"]);
-        if (payload["typ"] == "Offer") {
+        if (payload["rtcType"] == "offer") {
           route.go("/callee", extra: {
             "peerID": json["from"],
             "phone": json["phone"],
