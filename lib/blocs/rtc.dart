@@ -43,10 +43,15 @@ class RTCCubit extends Cubit<RTC> {
       ]
     }).then((conn) {
       peerConn = conn;
-      getUserMedia().then((stream) => localRenderer.srcObject = stream);
       peerConn.onTrack = (event) {
         remoteRenderer.srcObject = event.streams[0];
       };
+      getUserMedia().then((stream) {
+        localRenderer.srcObject = stream;
+        for (final track in stream.getVideoTracks()) {
+          peerConn.addTrack(track, stream);
+        }
+      });
       peerConn.onIceCandidate = (candidate) {
         sendRTCMessage(
             authToken: AuthToken.token,
