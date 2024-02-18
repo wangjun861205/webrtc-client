@@ -72,12 +72,6 @@ class _HomeScreen extends State<HomeScreen> {
                     child: SessionList(
                       limit: 20,
                       authToken: widget.authToken,
-                      onCall: (String id) {
-                        rtc.peerID = id;
-                        rtc.afterOffering =
-                            () => context.go("/call", extra: {"rtc": rtc});
-                        rtc.offer();
-                      },
                     ),
                   ),
                 ])));

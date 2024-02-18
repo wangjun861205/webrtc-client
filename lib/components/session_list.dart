@@ -7,9 +7,8 @@ import 'package:webrtc_client/components/call_nav_button.dart';
 
 class SessionItem extends StatelessWidget {
   final Session session;
-  final Function(String id) onCall;
 
-  const SessionItem({required this.session, required this.onCall, super.key});
+  const SessionItem({required this.session, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +28,7 @@ class SessionItem extends StatelessWidget {
         width: MediaQuery.of(context).size.width * 0.3,
         child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
           const Icon(Icons.chevron_right),
-          CallNavButton(onPress: () => onCall(session.peerID)),
+          CallNavButton(peerID: session.peerID, peerPhone: session.peerPhone),
         ]),
       ),
       onTap: () {
@@ -42,13 +41,8 @@ class SessionItem extends StatelessWidget {
 class SessionList extends StatefulWidget {
   final int limit;
   final String authToken;
-  final Function(String id) onCall;
 
-  const SessionList(
-      {required this.limit,
-      required this.authToken,
-      required this.onCall,
-      super.key});
+  const SessionList({required this.limit, required this.authToken, super.key});
 
   @override
   State<StatefulWidget> createState() {
@@ -77,7 +71,6 @@ class _SessionList extends State<SessionList> {
         itemCount: sessions.state.result.length,
         itemBuilder: (context, index) => SessionItem(
               session: sessions.state.result[index],
-              onCall: widget.onCall,
             ));
   }
 }

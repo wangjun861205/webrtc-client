@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:webrtc_client/blocs/friend.dart';
+import 'package:webrtc_client/components/call_nav_button.dart';
 import 'package:webrtc_client/main.dart';
 
 class FriendsList extends StatelessWidget {
@@ -29,12 +30,14 @@ class FriendsList extends StatelessWidget {
     return ListView(
       children: friends.state.friends
           .map((f) => ListTile(
-              leading: CircleAvatar(
-                  backgroundImage: NetworkImage(
-                      "http://${Config.backendDomain}/apis/v1/uploads/${f.avatar}",
-                      headers: {"X-Auth-Token": authToken})),
-              title: Text(f.phone),
-              onTap: () => context.go("/chat?to=${f.id}")))
+                leading: CircleAvatar(
+                    backgroundImage: NetworkImage(
+                        "http://${Config.backendDomain}/apis/v1/uploads/${f.avatar}",
+                        headers: {"X-Auth-Token": authToken})),
+                title: Text(f.phone),
+                trailing: CallNavButton(peerID: f.id, peerPhone: f.phone),
+                onTap: () => context.go("/chat?to=${f.id}"),
+              ))
           .toList(),
     );
   }

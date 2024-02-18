@@ -1,31 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:webrtc_client/webrtc.dart';
+import 'package:webrtc_client/blocs/rtc.dart';
+import 'package:webrtc_client/screens/video.dart';
 
-class CalleeScreen extends StatefulWidget {
-  final String authToken;
-  final RTC rtc;
-
-  const CalleeScreen({required this.authToken, required this.rtc, super.key});
-
-  @override
-  State<StatefulWidget> createState() {
-    return _CalleeScreen();
-  }
-}
-
-class _CalleeScreen extends State<CalleeScreen> {
-  @override
-  void initState() {
-    widget.rtc.afterAnswered =
-        () => context.go("/video", extra: {"rtc": widget.rtc});
-    widget.rtc.afterCanceled = () => context.go("/");
-    widget.rtc.afterRefused = () => context.go("/");
-    super.initState();
-  }
+class CalleeScreen extends StatelessWidget {
+  const CalleeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final rtc = BlocProvider.of<RTCCubit>(context);
+    if (rtc.state.error != null) {
+      return Center(
+          child: Column(
+        children: [
+          Text(rtc.state.error.toString()),
+          ElevatedButton(
+              onPressed: () {
+                rtc.close();
+                context.go("/");
+              },
+              child: const Text("Go home"))
+        ],
+      ));
+    }
+    if (rtc.state.status == RTCStatus.canceled ||
+        rtc.state.status == RTCStatus.refused) {
+      rtc.close();
+      context.go("/");
+      return Container();
+    }
+    if (rtc.state.status == RTCStatus.answered) {
+      return VideoScreen();
+    }
     return Scaffold(
       backgroundColor: Colors.black,
       body: Align(
@@ -36,7 +43,7 @@ class _CalleeScreen extends State<CalleeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
-                    widget.rtc.peerID!,
+                    rtc.peerID,
                     style: const TextStyle(color: Colors.white),
                   ),
                   Row(
@@ -44,7 +51,7 @@ class _CalleeScreen extends State<CalleeScreen> {
                       children: [
                         ElevatedButton(
                           onPressed: () {
-                            widget.rtc.answer();
+                            rtc.accept();
                           },
                           style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.green,
@@ -56,7 +63,7 @@ class _CalleeScreen extends State<CalleeScreen> {
                         ),
                         ElevatedButton(
                           onPressed: () {
-                            widget.rtc.refuse();
+                            rtc.refuse();
                           },
                           style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.red,
