@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:webrtc_client/apis/rtc_message.dart';
@@ -50,7 +51,7 @@ class RTCCubit extends Cubit<RTC> {
         sendRTCMessage(
             authToken: AuthToken.token,
             msg: RTCMessage(
-                to: peerPhone,
+                to: peerID,
                 typ: "IceCandidate",
                 payload: jsonEncode({
                   "id": candidate.sdpMid,
@@ -85,9 +86,25 @@ class RTCCubit extends Cubit<RTC> {
             .then((_) => emit(RTC(status: RTCStatus.beingCalled)));
         return;
       }
-      peerConn.createOffer().then((description) => peerConn
-          .setLocalDescription(description)
-          .then((_) => emit(RTC(status: RTCStatus.calling))));
+      peerConn.createOffer().then((description) {
+        peerConn.setLocalDescription(description).then((_) {
+          try {
+            sendRTCMessage(
+                authToken: AuthToken.token,
+                msg: RTCMessage(
+                    to: peerID,
+                    typ: "Offer",
+                    payload: jsonEncode({
+                      "sdp": description.sdp,
+                      "rtcType": description.type
+                    }))).then((_) {
+              emit(RTC(status: RTCStatus.calling));
+            }, onError: (err) => emit(RTC(status: state.status, error: err)));
+          } catch (err) {
+            emit(RTC(status: state.status, error: err));
+          }
+        });
+      });
     });
   }
 

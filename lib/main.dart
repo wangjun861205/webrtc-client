@@ -46,6 +46,7 @@ class WS {
         Uri.parse("ws://${Config.backendDomain}/ws?auth_token=$authToken"));
     _ctrl = _ctrl ?? StreamController.broadcast();
     _ws!.stream.listen((event) {
+      debugPrint(event);
       final json = jsonDecode(event);
       if (json["typ"] == "RTC") {
         final payload = jsonDecode(json["payload"]);
@@ -165,6 +166,7 @@ final route = GoRouter(
             final extra = state.extra as Map<String, String>;
             final peerID = extra["peerID"]!;
             final peerPhone = extra["peerPhone"]!;
+            debugPrint("peerID: $peerID, peerPhone: $peerPhone");
             return BlocProvider(
                 create: (_) => RTCCubit(peerID: peerID, peerPhone: peerPhone),
                 child: const CallScreen());
