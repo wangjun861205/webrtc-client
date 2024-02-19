@@ -71,7 +71,8 @@ Future<ChatMessage> sendChatMessage(
       headers: {
         "Content-Type": "application/json",
         "X-Auth-Token": authToken,
-      });
+      },
+      body: jsonEncode(msg));
   if (resp.statusCode != 200) {
     throw Exception("failed to send chat message");
   }
