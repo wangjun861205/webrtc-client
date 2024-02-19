@@ -74,7 +74,7 @@ Future<ChatMessage> sendChatMessage(
       },
       body: jsonEncode(msg));
   if (resp.statusCode != 200) {
-    throw Exception("failed to send chat message");
+    throw Exception("failed to send chat message: ${resp.body}");
   }
   return ChatMessage.fromJson(jsonDecode(resp.body));
 }
