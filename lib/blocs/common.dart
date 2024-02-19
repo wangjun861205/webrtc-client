@@ -81,4 +81,15 @@ class QueryCubit<P, R> extends Cubit<Query<P, R>> {
         isLoading: state.isLoading,
         error: state.error));
   }
+
+  void setError(Object error) {
+    emit(Query(
+        params: state.params,
+        result: state.result,
+        fetchFunc: state.fetchFunc,
+        handleResultFunc: state.handleResultFunc,
+        nextParamsFunc: state.nextParamsFunc,
+        isLoading: state.isLoading,
+        error: error));
+  }
 }

@@ -8,12 +8,14 @@ class Session {
   final String peerID;
   final String peerPhone;
   int unreadCount;
+  String latestMimeType;
   String latestContent;
 
   Session(
       {required this.peerID,
       required this.peerPhone,
       required this.unreadCount,
+      required this.latestMimeType,
       required this.latestContent});
 
   factory Session.fromJson(Map<String, dynamic> json) {
@@ -21,6 +23,7 @@ class Session {
         peerID: json["peer_id"],
         peerPhone: json["peer_phone"],
         unreadCount: json["unread_count"],
+        latestMimeType: json["latest_mime_type"],
         latestContent: json["latest_content"]);
   }
 }

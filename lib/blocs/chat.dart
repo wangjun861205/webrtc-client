@@ -42,6 +42,7 @@ class ChatMessagesCubit extends QueryCubit<String?, List<ChatMessage>> {
       messages.add(ChatMessage(
           id: msg["payload"]["id"],
           from: msg["from"],
+          mimeType: msg["payload"]["mime_type"],
           content: msg["payload"]["content"],
           sentAt: DateTime.now().toIso8601String()));
       setResult(messages);
@@ -54,9 +55,18 @@ class ChatMessagesCubit extends QueryCubit<String?, List<ChatMessage>> {
     return super.close();
   }
 
-  void pushMessage(ChatMessage message) {
-    final messages = state.result;
-    messages.add(message);
-    setResult(messages);
+  Future<void> pushMessage(
+      {required String mimeType, required String content}) async {
+    try {
+      final msg = await sendChatMessage(
+          authToken: AuthToken.token,
+          msg: SendChatMessage(
+              to: peerID, mimeType: mimeType, content: content));
+      final messages = state.result;
+      messages.add(msg);
+      setResult(messages);
+    } catch (err) {
+      setError(err);
+    }
   }
 }

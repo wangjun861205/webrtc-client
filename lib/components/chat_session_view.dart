@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:webrtc_client/apis/chat_message.dart';
@@ -50,27 +52,40 @@ class _ChatSessionView extends State<ChatSessionView> {
       widget.scrollCtrl.animateTo(widget.scrollCtrl.position.maxScrollExtent,
           duration: const Duration(milliseconds: 200), curve: Curves.easeInOut);
     });
-    return SizedBox(
-        height: MediaQuery.of(context).size.height * 0.6,
-        child: ListView.builder(
-            controller: widget.scrollCtrl,
-            itemCount: msgs.state.result.length,
-            itemBuilder: (context, i) {
-              return msgs.state.result[i].from == me.state.me!.id
-                  ? SizedBox(
-                      child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                          selfAvatar,
-                          Text(msgs.state.result[i].content)
-                        ]))
-                  : SizedBox(
-                      child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                          Text(msgs.state.result[i].content),
-                          peerAvatar,
-                        ]));
-            }));
+    return ListView.builder(
+        controller: widget.scrollCtrl,
+        itemCount: msgs.state.result.length,
+        itemBuilder: (context, i) {
+          return msgs.state.result[i].from == me.state.me!.id
+              ? SizedBox(
+                  child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                      selfAvatar,
+                      msgs.state.result[i].mimeType == "text/plain"
+                          ? Text(msgs.state.result[i].content)
+                          : ConstrainedBox(
+                              constraints: BoxConstraints(
+                                  maxWidth:
+                                      MediaQuery.of(context).size.width * 0.5),
+                              child: Image.memory(
+                                base64Decode(msgs.state.result[i].content),
+                              ))
+                    ]))
+              : SizedBox(
+                  child:
+                      Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                  msgs.state.result[i].mimeType == "text/plain"
+                      ? Text(msgs.state.result[i].content)
+                      : ConstrainedBox(
+                          constraints: BoxConstraints(
+                              maxWidth:
+                                  MediaQuery.of(context).size.width * 0.5),
+                          child: Image.memory(
+                            base64Decode(msgs.state.result[i].content),
+                          )),
+                  peerAvatar,
+                ]));
+        });
   }
 }

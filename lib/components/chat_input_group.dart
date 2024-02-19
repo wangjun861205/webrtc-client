@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:webrtc_client/apis/chat_message.dart';
 import 'package:webrtc_client/blocs/chat.dart';
+import 'package:webrtc_client/components/send_image_button.dart';
 import 'package:webrtc_client/main.dart';
 
 class ChatInputGroup extends StatefulWidget {
@@ -35,33 +36,20 @@ class _ChatInputGroup extends State<ChatInputGroup> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Flexible(
-          flex: 7,
+          flex: 6,
           child: TextField(
             controller: textCtrl,
             textInputAction: TextInputAction.send,
           ),
         ),
+        Flexible(flex: 1, child: SendImageButton()),
         Flexible(
           flex: 3,
           child: ElevatedButton(
               onPressed: () {
-                sendChatMessage(
-                        authToken: AuthToken.token,
-                        msg: SendChatMessage(
-                            to: widget.to,
-                            mimeType: "plain/text",
-                            content: textCtrl.text))
-                    .then((m) {
-                  msgs.pushMessage(m);
-                  textCtrl.clear();
-                }, onError: (err) {
-                  context.push("/error", extra: {
-                    "error": err,
-                    "retry": () {
-                      context.pop();
-                    }
-                  });
-                });
+                msgs
+                    .pushMessage(mimeType: "text/plain", content: textCtrl.text)
+                    .then((_) => textCtrl.clear());
               },
               child: const Text("Send")),
         ),

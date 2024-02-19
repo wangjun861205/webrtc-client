@@ -7,11 +7,13 @@ import 'package:webrtc_client/main.dart';
 class ChatMessage {
   final String id;
   final String from;
+  final String mimeType;
   final String content;
   final String sentAt;
   const ChatMessage(
       {required this.id,
       required this.from,
+      required this.mimeType,
       required this.content,
       required this.sentAt});
 
@@ -19,6 +21,7 @@ class ChatMessage {
     return ChatMessage(
         id: json["id"],
         from: json["from"],
+        mimeType: json["mime_type"],
         content: json["content"],
         sentAt: json["sent_at"]);
   }

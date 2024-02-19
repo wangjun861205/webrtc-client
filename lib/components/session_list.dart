@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -22,8 +24,18 @@ class SessionItem extends StatelessWidget {
                   padding: const EdgeInsets.only(left: 30),
                   child: Text(session.peerPhone)),
             )
-          : Text(session.peerPhone),
-      subtitle: Text(session.latestContent),
+          : Text(
+              session.peerPhone,
+            ),
+      subtitle: session.latestMimeType == "text/plain"
+          ? Text(session.latestContent)
+          : Image.memory(
+              base64Decode(session.latestContent),
+              width: 100,
+              height: 100,
+              alignment: Alignment.center,
+              fit: BoxFit.scaleDown,
+            ),
       trailing: SizedBox(
         width: MediaQuery.of(context).size.width * 0.3,
         child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [

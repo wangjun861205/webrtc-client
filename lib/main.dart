@@ -26,6 +26,7 @@ import 'package:webrtc_client/screens/me.dart';
 import 'package:webrtc_client/screens/search_friend.dart';
 import 'package:webrtc_client/screens/signup.dart';
 import 'package:webrtc_client/screens/video.dart';
+import 'package:webrtc_client/screens/welcome.dart';
 import 'package:webrtc_client/utils.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import './components/video_view.dart';
@@ -147,6 +148,7 @@ void main() async {
 }
 
 final route = GoRouter(
+    initialLocation: "/welcome",
     routes: [
       GoRoute(
           path: "/",
@@ -219,6 +221,11 @@ final route = GoRouter(
           builder: (context, state) {
             final extra = state.extra as Map<String, dynamic>;
             return ErrorScreen(error: extra["error"], retry: extra["retry"]);
+          }),
+      GoRoute(
+          path: "/welcome",
+          builder: (context, state) {
+            return WelcomeScreen();
           })
     ],
     redirect: (context, state) async {

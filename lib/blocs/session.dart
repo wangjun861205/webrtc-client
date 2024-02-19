@@ -14,15 +14,15 @@ class SessionCubit extends Cubit<Session> {
       : super(session) {
     wsSub = WS.getOrCreateStream(AuthToken.token).listen((event) {
       final json = jsonDecode(event);
-      if (json["typ"] != "ChatMessage" ||
-          json["data"]["from"] != state.peerID) {
+      if (json["typ"] != "Chat" || json["from"] != state.peerID) {
         return;
       }
       emit(Session(
           peerID: state.peerID,
           peerPhone: state.peerPhone,
           unreadCount: state.unreadCount + 1,
-          latestContent: json["data"]["content"]));
+          latestMimeType: json["payload"]["mime_type"],
+          latestContent: json["payload"]["content"]));
     });
   }
 
@@ -70,6 +70,7 @@ class SessionsCubit extends QueryCubit<void, List<Session>> {
             peerID: json["from"],
             peerPhone: json["phone"],
             unreadCount: 1,
+            latestMimeType: json["payload"]["mime_type"],
             latestContent: json["payload"]["content"]));
       }
       emit(Query(
