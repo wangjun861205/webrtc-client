@@ -13,10 +13,12 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:go_router/go_router.dart';
 import 'package:webrtc_client/apis/me.dart';
 import 'package:webrtc_client/blocs/chat.dart';
+import 'package:webrtc_client/blocs/me.dart';
 import 'package:webrtc_client/blocs/rtc.dart';
 import 'package:webrtc_client/screens/call.dart';
 import 'package:webrtc_client/screens/callee.dart';
 import 'package:webrtc_client/screens/chat.dart';
+import 'package:webrtc_client/screens/error.dart';
 import 'package:webrtc_client/screens/friends.dart';
 import 'package:webrtc_client/screens/home.dart';
 import 'package:webrtc_client/screens/login.dart';
@@ -159,9 +161,12 @@ final route = GoRouter(
       GoRoute(
           path: "/chat",
           builder: (context, state) {
-            return ChatScreen(
-                authToken: AuthToken.token,
-                to: state.uri.queryParameters["to"]!);
+            return BlocProvider(
+              create: (_) => MeCubit(),
+              child: ChatScreen(
+                  authToken: AuthToken.token,
+                  to: state.uri.queryParameters["to"]!),
+            );
           }),
       GoRoute(
           path: "/me",
@@ -209,6 +214,12 @@ final route = GoRouter(
           builder: (context, state) {
             return SearchFriendScreen(authToken: AuthToken.token);
           }),
+      GoRoute(
+          path: "/error",
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>;
+            return ErrorScreen(error: extra["error"], retry: extra["retry"]);
+          })
     ],
     redirect: (context, state) async {
       if (state.matchedLocation == "/login" ||

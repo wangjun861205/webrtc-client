@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:webrtc_client/blocs/chat.dart';
+import 'package:webrtc_client/blocs/me.dart';
 import 'package:webrtc_client/components/chat_input_group.dart';
 import 'package:webrtc_client/components/chat_session_view.dart';
 import 'package:go_router/go_router.dart';
+import 'package:webrtc_client/screens/error.dart';
 
 class ChatScreen extends StatefulWidget {
   final String authToken;
@@ -20,6 +22,13 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreen extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
+    final me = BlocProvider.of<MeCubit>(context, listen: true);
+    if (me.state.error != null) {
+      return ErrorScreen(error: me.state.error, retry: () => setState(() {}));
+    }
+    if (me.state.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
     return BlocProvider(
         create: (_) => ChatMessagesCubit(
               authToken: widget.authToken,

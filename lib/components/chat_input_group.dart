@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:webrtc_client/apis/chat_message.dart';
 import 'package:webrtc_client/blocs/chat.dart';
 import 'package:webrtc_client/main.dart';
@@ -53,10 +54,14 @@ class _ChatInputGroup extends State<ChatInputGroup> {
                     .then((m) {
                   msgs.pushMessage(m);
                   textCtrl.clear();
-                },
-                        onError: (err) => ScaffoldMessenger.of(context)
-                            .showSnackBar(
-                                SnackBar(content: Text(err.toString()))));
+                }, onError: (err) {
+                  context.push("/error", extra: {
+                    "error": err,
+                    "retry": () {
+                      context.pop();
+                    }
+                  });
+                });
               },
               child: const Text("Send")),
         ),

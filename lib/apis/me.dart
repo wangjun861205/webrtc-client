@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart';
+import 'package:webrtc_client/blocs/me.dart';
 import 'package:webrtc_client/main.dart';
 
 Future<void> upsertAvatar(
@@ -31,4 +32,17 @@ Future<void> verifyAuthToken(String authToken) async {
   if (resp.statusCode != 200) {
     throw Exception("failed to verify auth token");
   }
+}
+
+Future<Me?> me(String authToken) async {
+  final resp = await get(Uri.parse("http://${Config.backendDomain}/apis/v1/me"),
+      headers: {"X-Auth-Token": authToken});
+  if (resp.statusCode == 403 || resp.statusCode == 401) {
+    return null;
+  }
+  if (resp.statusCode != 200) {
+    throw Exception("failed to get my info: ${resp.body}");
+  }
+  final json = jsonDecode(resp.body);
+  return Me.fromJson(json);
 }
