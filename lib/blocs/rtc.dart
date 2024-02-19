@@ -43,15 +43,6 @@ class RTCCubit extends Cubit<RTC> {
       ]
     }).then((conn) {
       peerConn = conn;
-      peerConn.onTrack = (event) {
-        remoteRenderer.srcObject = event.streams[0];
-      };
-      getUserMedia().then((stream) {
-        localRenderer.srcObject = stream;
-        for (final track in stream.getVideoTracks()) {
-          peerConn.addTrack(track, stream);
-        }
-      });
       peerConn.onIceCandidate = (candidate) {
         sendRTCMessage(
             authToken: AuthToken.token,
@@ -86,29 +77,39 @@ class RTCCubit extends Cubit<RTC> {
             emit(RTC(status: RTCStatus.canceled));
         }
       });
-      if (remoteDescription != null) {
-        peerConn
-            .setRemoteDescription(remoteDescription)
-            .then((_) => emit(RTC(status: RTCStatus.beingCalled)));
-        return;
-      }
-      peerConn.createOffer().then((description) {
-        peerConn.setLocalDescription(description).then((_) {
-          try {
-            sendRTCMessage(
-                authToken: AuthToken.token,
-                msg: RTCMessage(
-                    to: peerID,
-                    typ: "Offer",
-                    payload: jsonEncode({
-                      "sdp": description.sdp,
-                      "rtcType": description.type
-                    }))).then((_) {
-              emit(RTC(status: RTCStatus.calling));
-            }, onError: (err) => emit(RTC(status: state.status, error: err)));
-          } catch (err) {
-            emit(RTC(status: state.status, error: err));
+      peerConn.onTrack = (event) {
+        remoteRenderer.srcObject = event.streams[0];
+      };
+      getUserMedia().then((stream) {
+        localRenderer.srcObject = stream;
+        peerConn.addTrack(stream.getVideoTracks()[0], stream).then((_) {
+          if (remoteDescription != null) {
+            peerConn
+                .setRemoteDescription(remoteDescription)
+                .then((_) => emit(RTC(status: RTCStatus.beingCalled)));
+            return;
           }
+          peerConn.createOffer().then((description) {
+            peerConn.setLocalDescription(description).then((_) {
+              try {
+                sendRTCMessage(
+                    authToken: AuthToken.token,
+                    msg: RTCMessage(
+                        to: peerID,
+                        typ: "Offer",
+                        payload: jsonEncode({
+                          "sdp": description.sdp,
+                          "rtcType": description.type
+                        }))).then((_) {
+                  emit(RTC(status: RTCStatus.calling));
+                },
+                    onError: (err) =>
+                        emit(RTC(status: state.status, error: err)));
+              } catch (err) {
+                emit(RTC(status: state.status, error: err));
+              }
+            });
+          });
         });
       });
     });
