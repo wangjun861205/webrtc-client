@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:webrtc_client/apis/chat_message.dart';
 import 'package:webrtc_client/blocs/common.dart';
 import 'package:webrtc_client/main.dart';
@@ -7,10 +8,11 @@ import 'package:webrtc_client/main.dart';
 class ChatMessagesCubit extends QueryCubit<String?, List<ChatMessage>> {
   final String authToken;
   final String peerID;
+  final Function()? afterChange;
   late StreamSubscription wsSub;
 
   ChatMessagesCubit(
-      {required this.authToken, required this.peerID, Function()? onChange})
+      {required this.authToken, required this.peerID, this.afterChange})
       : super(
             query: Query<String?, List<ChatMessage>>(
                 params: null,
@@ -35,17 +37,17 @@ class ChatMessagesCubit extends QueryCubit<String?, List<ChatMessage>> {
                 })) {
     wsSub = WS.getOrCreateStream(authToken).listen((event) {
       final msg = jsonDecode(event);
-      if (msg["typ"] != "ChatMessage" || msg["data"]["from"] != peerID) {
+      if (msg["typ"] != "Chat" || msg["from"] != peerID) {
         return;
       }
       final messages = state.result;
       messages.add(ChatMessage(
-          id: msg["data"]["id"],
-          from: msg["data"]["from"],
-          content: msg["data"]["content"],
+          id: msg["payload"]["id"],
+          from: msg["from"],
+          content: msg["payload"]["content"],
           sentAt: DateTime.now().toIso8601String()));
       setResult(messages);
-      onChange?.call();
+      afterChange?.call();
     });
   }
 
@@ -59,5 +61,6 @@ class ChatMessagesCubit extends QueryCubit<String?, List<ChatMessage>> {
     final messages = state.result;
     messages.add(message);
     setResult(messages);
+    afterChange?.call();
   }
 }

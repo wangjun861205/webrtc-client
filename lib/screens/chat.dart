@@ -25,8 +25,7 @@ class _ChatScreen extends State<ChatScreen> {
         create: (_) => ChatMessagesCubit(
             authToken: widget.authToken,
             peerID: widget.to,
-            onChange: () {
-              debugPrint("+++++++++++++++++++++++++++++++++++++++++++++");
+            afterChange: () {
               widget.scrollCtrl.animateTo(
                   widget.scrollCtrl.position.maxScrollExtent + 200,
                   duration: const Duration(milliseconds: 200),
