@@ -55,22 +55,22 @@ class SessionsCubit extends QueryCubit<void, List<Session>> {
                     required List<Session> incomeResult}) {})) {
     wsSub = WS.getOrCreateStream(authToken).listen((event) {
       final json = jsonDecode(event);
-      if (json["typ"] != "ChatMessage") {
+      if (json["typ"] != "Chat") {
         return;
       }
       final sessions = state.result;
       final target = sessions
-          .where((element) => element.peerID == json["data"]["from"])
+          .where((element) => element.peerID == json["from"])
           .firstOrNull;
       if (target != null) {
-        target.latestContent = json["data"]["content"];
+        target.latestContent = json["payload"]["content"];
         target.unreadCount += 1;
       } else {
         sessions.add(Session(
-            peerID: json["data"]["from"],
-            peerPhone: json["data"]["phone"],
+            peerID: json["from"],
+            peerPhone: json["phone"],
             unreadCount: 1,
-            latestContent: json["data"]["content"]));
+            latestContent: json["payload"]["content"]));
       }
       emit(Query(
           params: null,

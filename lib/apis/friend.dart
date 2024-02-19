@@ -117,7 +117,7 @@ Future<void> rejectRequest(String id, authToken) async {
 class Friend {
   final String id;
   final String phone;
-  final String avatar;
+  final String? avatar;
 
   const Friend({required this.id, required this.phone, required this.avatar});
 

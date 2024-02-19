@@ -41,3 +41,39 @@ Future<List<ChatMessage>> chatMessageHistory(
       .map((m) => ChatMessage.fromJson(m))
       .toList();
 }
+
+class SendChatMessage {
+  final String to;
+  final String mimeType;
+  final String content;
+
+  const SendChatMessage(
+      {required this.to, required this.mimeType, required this.content});
+
+  Map<String, dynamic> toJson() {
+    return {
+      "to": to,
+      "mime_type": mimeType,
+      "content": content,
+    };
+  }
+
+  factory SendChatMessage.fromJson(Map<String, dynamic> json) {
+    return SendChatMessage(
+        to: json["to"], mimeType: json["mime_type"], content: json["content"]);
+  }
+}
+
+Future<ChatMessage> sendChatMessage(
+    {required String authToken, required SendChatMessage msg}) async {
+  final resp = await post(
+      Uri.parse("http://${Config.backendDomain}/apis/v1/chat_messages"),
+      headers: {
+        "Content-Type": "application/json",
+        "X-Auth-Token": authToken,
+      });
+  if (resp.statusCode != 200) {
+    throw Exception("failed to send chat message");
+  }
+  return ChatMessage.fromJson(jsonDecode(resp.body));
+}

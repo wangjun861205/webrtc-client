@@ -44,15 +44,19 @@ class _ChatInputGroup extends State<ChatInputGroup> {
           flex: 3,
           child: ElevatedButton(
               onPressed: () {
-                msgs.pushMessage(ChatMessage(
-                    id: "",
-                    from: "",
-                    content: textCtrl.text,
-                    sentAt: DateTime.now().toIso8601String()));
-                WS.getOrCreateSink(widget.authToken).add(jsonEncode({
-                      "ChatMessage": {"to": widget.to, "content": textCtrl.text}
-                    }));
-                textCtrl.clear();
+                sendChatMessage(
+                        authToken: AuthToken.token,
+                        msg: SendChatMessage(
+                            to: widget.to,
+                            mimeType: "plain/text",
+                            content: textCtrl.text))
+                    .then((m) {
+                  msgs.pushMessage(m);
+                  textCtrl.clear();
+                },
+                        onError: (err) => ScaffoldMessenger.of(context)
+                            .showSnackBar(
+                                SnackBar(content: Text(err.toString()))));
               },
               child: const Text("Send")),
         ),
