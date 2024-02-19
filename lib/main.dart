@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:http/http.dart';
 import 'package:sdp_transform/sdp_transform.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:go_router/go_router.dart';
@@ -80,6 +81,8 @@ class WS {
 
   static close() {
     _ws!.sink.close();
+    delete(Uri.parse("http://${Config.backendDomain}/me"),
+        headers: {"X-Auth-Token": AuthToken.token});
   }
 }
 
@@ -108,7 +111,6 @@ initFCM() async {
     provisional: false,
     sound: true,
   );
-  debugPrint('User granted permission: ${settings.authorizationStatus}');
   final fcmToken = await FirebaseMessaging.instance
       .getToken(vapidKey: kIsWeb ? dotenv.get("VAPID") : null);
   if (fcmToken == null) {
@@ -117,6 +119,12 @@ initFCM() async {
   await putFCMToken(fcmToken);
   final authToken = await getAuthToken();
   if (authToken != null) {
+    try {
+      await verifyAuthToken(authToken);
+    } catch (err) {
+      route.go("/login");
+      return;
+    }
     await updateFCMToken(authToken, fcmToken);
   }
   FirebaseMessaging.onMessage.listen((event) {

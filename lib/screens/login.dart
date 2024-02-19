@@ -57,12 +57,13 @@ class LoginScreen extends StatelessWidget {
                       .then((token) {
                     putAuthToken(token).then(
                       (_) {
-                        getFCMToken().then((fcmToken) {
-                          updateFCMToken(token, fcmToken).then((_) {
-                            WS.setWS(token);
-                            context.go("/");
-                          });
-                        });
+                        initFCM().then((_) => context.go("/"));
+                        // getFCMToken().then((fcmToken) {
+                        //   updateFCMToken(token, fcmToken).then((_) {
+                        //     WS.setWS(token);
+                        //     context.go("/");
+                        //   });
+                        // });
                       },
                     );
                   },

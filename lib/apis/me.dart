@@ -24,3 +24,11 @@ Future<void> updateFCMToken(String authToken, fcmToken) async {
     throw Exception("failed to update FCM token: ${resp.body}");
   }
 }
+
+Future<void> verifyAuthToken(String authToken) async {
+  final resp = await get(Uri.parse("http://${Config.backendDomain}/apis/v1"),
+      headers: {"X-Auth-Token": authToken});
+  if (resp.statusCode != 200) {
+    throw Exception("failed to verify auth token");
+  }
+}
