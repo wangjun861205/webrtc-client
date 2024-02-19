@@ -8,9 +8,8 @@ import 'package:go_router/go_router.dart';
 class ChatScreen extends StatefulWidget {
   final String authToken;
   final String to;
-  final scrollCtrl = ScrollController();
 
-  ChatScreen({required this.authToken, required this.to, super.key});
+  const ChatScreen({required this.authToken, required this.to, super.key});
 
   @override
   State<StatefulWidget> createState() {
@@ -23,15 +22,9 @@ class _ChatScreen extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return BlocProvider(
         create: (_) => ChatMessagesCubit(
-            authToken: widget.authToken,
-            peerID: widget.to,
-            afterChange: () {
-              widget.scrollCtrl.animateTo(
-                  widget.scrollCtrl.position.maxScrollExtent + 200,
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeInOut);
-            })
-          ..next(),
+              authToken: widget.authToken,
+              peerID: widget.to,
+            )..next(),
         child: Scaffold(
           appBar: AppBar(
             leading: IconButton(
@@ -44,15 +37,14 @@ class _ChatScreen extends State<ChatScreen> {
           body: Column(
             children: [
               Flexible(
-                flex: 8,
+                flex: 9,
                 child: ChatSessionView(
                   authToken: widget.authToken,
                   to: widget.to,
-                  scrollCtrl: widget.scrollCtrl,
                 ),
               ),
               Flexible(
-                  flex: 2,
+                  flex: 1,
                   child: ChatInputGroup(
                       authToken: widget.authToken, to: widget.to))
             ],

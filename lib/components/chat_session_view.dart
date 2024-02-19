@@ -8,13 +8,9 @@ import 'package:webrtc_client/main.dart';
 class ChatSessionView extends StatefulWidget {
   final String authToken;
   final String to;
-  final ScrollController scrollCtrl;
+  final ScrollController scrollCtrl = ScrollController();
 
-  const ChatSessionView(
-      {required this.authToken,
-      required this.to,
-      required this.scrollCtrl,
-      super.key});
+  ChatSessionView({required this.authToken, required this.to, super.key});
 
   @override
   State<StatefulWidget> createState() {
@@ -51,6 +47,10 @@ class _ChatSessionView extends State<ChatSessionView> {
         ],
       ));
     }
+    WidgetsBinding.instance.addPostFrameCallback((d) {
+      widget.scrollCtrl.animateTo(widget.scrollCtrl.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 200), curve: Curves.easeInOut);
+    });
     return SizedBox(
         height: MediaQuery.of(context).size.height * 0.6,
         child: ListView.builder(

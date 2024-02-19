@@ -8,11 +8,9 @@ import 'package:webrtc_client/main.dart';
 class ChatMessagesCubit extends QueryCubit<String?, List<ChatMessage>> {
   final String authToken;
   final String peerID;
-  final Function()? afterChange;
   late StreamSubscription wsSub;
 
-  ChatMessagesCubit(
-      {required this.authToken, required this.peerID, this.afterChange})
+  ChatMessagesCubit({required this.authToken, required this.peerID})
       : super(
             query: Query<String?, List<ChatMessage>>(
                 params: null,
@@ -47,7 +45,6 @@ class ChatMessagesCubit extends QueryCubit<String?, List<ChatMessage>> {
           content: msg["payload"]["content"],
           sentAt: DateTime.now().toIso8601String()));
       setResult(messages);
-      afterChange?.call();
     });
   }
 
@@ -61,6 +58,5 @@ class ChatMessagesCubit extends QueryCubit<String?, List<ChatMessage>> {
     final messages = state.result;
     messages.add(message);
     setResult(messages);
-    afterChange?.call();
   }
 }
