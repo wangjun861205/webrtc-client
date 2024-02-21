@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:webrtc_client/apis/session.dart';
 import 'package:webrtc_client/blocs/session.dart';
 import 'package:webrtc_client/components/call_nav_button.dart';
+import 'package:webrtc_client/components/drag_delete_item.dart';
 
 class SessionItem extends StatelessWidget {
   final Session session;
@@ -79,10 +80,18 @@ class _SessionList extends State<SessionList> {
     if (sessions.state.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
+    if (sessions.state.result.isEmpty) {
+      return const Center(
+          child: Text(
+        "No chat session",
+        style: TextStyle(fontSize: 18),
+      ));
+    }
     return ListView.builder(
         itemCount: sessions.state.result.length,
-        itemBuilder: (context, index) => SessionItem(
+        itemBuilder: (context, index) => DragDeleteItem(
+                child: SessionItem(
               session: sessions.state.result[index],
-            ));
+            )));
   }
 }
