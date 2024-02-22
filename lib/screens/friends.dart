@@ -5,6 +5,7 @@ import 'package:webrtc_client/apis/friend.dart';
 import 'package:webrtc_client/blocs/friend.dart';
 import 'package:webrtc_client/components/friend_request_list.dart';
 import 'package:webrtc_client/components/friends_list.dart';
+import 'package:webrtc_client/components/layouts.dart';
 import 'package:webrtc_client/components/user_list.dart';
 
 class FriendsScreen extends StatefulWidget {
@@ -29,7 +30,8 @@ class _FriendsScreen extends State<FriendsScreen> {
             create: (_) => FriendsCubit(authToken: widget.authToken)..load()),
         BlocProvider(create: (_) => FriendRequestsCubit()..next()),
       ],
-      child: Scaffold(
+      child: WithBottomNavigationBar(
+          selectedIndex: 1,
           appBar: AppBar(
             title: const Text("Friends"),
             centerTitle: true,

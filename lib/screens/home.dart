@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:webrtc_client/blocs/session.dart';
+import 'package:webrtc_client/components/layouts.dart';
 import 'package:webrtc_client/components/session_list.dart';
 import 'package:webrtc_client/components/friends_screen_button.dart';
 import 'package:webrtc_client/components/me_nav_button.dart';
@@ -45,9 +46,11 @@ class _HomeScreen extends State<HomeScreen> {
     if (rtc.status == RTCStatus.uninitated) {
       return const Center(child: CircularProgressIndicator());
     }
+
     return BlocProvider(
         create: (_) => SessionsCubit(authToken: widget.authToken)..next(),
-        child: Scaffold(
+        child: WithBottomNavigationBar(
+            selectedIndex: 0,
             appBar: AppBar(
               title: const Text("Home"),
               centerTitle: true,

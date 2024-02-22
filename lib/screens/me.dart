@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:webrtc_client/components/avatar_group.dart';
+import 'package:webrtc_client/components/layouts.dart';
+import 'package:webrtc_client/components/logout_button.dart';
 
 class MeScreen extends StatefulWidget {
   final String authToken;
@@ -15,7 +17,8 @@ class MeScreen extends StatefulWidget {
 class _MeScreen extends State<MeScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WithBottomNavigationBar(
+        selectedIndex: 2,
         appBar: AppBar(
             title: const Text("Me"),
             centerTitle: true,
@@ -26,7 +29,10 @@ class _MeScreen extends State<MeScreen> {
         body: Align(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: [AvatarGroup(authToken: widget.authToken)],
+            children: [
+              AvatarGroup(authToken: widget.authToken),
+              const LogoutButton()
+            ],
           ),
         ));
   }

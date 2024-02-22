@@ -46,3 +46,11 @@ Future<Me?> me(String authToken) async {
   final json = jsonDecode(resp.body);
   return Me.fromJson(json);
 }
+
+Future<void> logout(String authToken) async {
+  final resp = await delete(Uri.parse("http://${Config.backendDomain}/logout"),
+      headers: {"X-Auth-Token": authToken});
+  if (resp.statusCode != 200) {
+    throw Exception("failed to logout: ${resp.body}");
+  }
+}
