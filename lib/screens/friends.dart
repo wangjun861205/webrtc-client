@@ -6,7 +6,6 @@ import 'package:webrtc_client/blocs/friend.dart';
 import 'package:webrtc_client/components/friend_request_list.dart';
 import 'package:webrtc_client/components/friends_list.dart';
 import 'package:webrtc_client/components/layouts.dart';
-import 'package:webrtc_client/components/user_list.dart';
 
 class FriendsScreen extends StatefulWidget {
   final String authToken;
@@ -39,13 +38,15 @@ class _FriendsScreen extends State<FriendsScreen> {
               icon: const Icon(Icons.arrow_circle_left_outlined),
               onPressed: () => context.go("/"),
             ),
+            actions: [
+              IconButton(
+                  onPressed: () => context.go("/search_friends"),
+                  icon: const Icon(Icons.add))
+            ],
           ),
           body: Column(
             children: [
               const Flexible(child: FriendRequestList()),
-              // UserList(
-              //   authToken: widget.authToken,
-              // ),
               Flexible(
                 child: FriendsList(authToken: widget.authToken),
               )

@@ -54,18 +54,6 @@ class _HomeScreen extends State<HomeScreen> {
             appBar: AppBar(
               title: const Text("Home"),
               centerTitle: true,
-              actions: [
-                const MeNavButton(),
-                FriendsScreenButton(
-                  authToken: widget.authToken,
-                ),
-                TextButton(
-                    onPressed: () => context.go("/login"),
-                    child: const Text("Login")),
-                IconButton(
-                    onPressed: () => context.go("/search_friends"),
-                    icon: const Icon(Icons.add)),
-              ],
             ),
             body: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
